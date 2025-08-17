@@ -1,0 +1,51 @@
+using System;
+using UnityEngine;
+
+namespace Mantega.Stats
+{
+    public static partial class StatType
+    {
+        [Serializable]
+        public class ControlledInt : IStatType<Mantega.ControlledInt, ControlledIntChange>
+        {
+            [SerializeField] private Mantega.ControlledInt _value;
+            public Mantega.ControlledInt Value => _value;
+            public void ApplyChange(ControlledIntChange change)
+            {
+                HandleIntChange(change.changeMax, ref _value.Max);
+                HandleIntChange(change.changeMin, ref _value.Min);
+                _value.Value = HandleIntChange(change.changeValue, _value.Value);
+            }
+
+            private int HandleIntChange(StatTypeChange.ChangeField<int> changeField, int value) => HandleIntChange(changeField, ref value);
+
+            private int HandleIntChange(StatTypeChange.ChangeField<int> changeField, ref int value)
+            {
+                switch (changeField.Type)
+                {
+                    case StatTypeChange.ChangeType.None:
+                        break;
+                    case StatTypeChange.ChangeType.Set:
+                        value = changeField.Value;
+                        break;
+                    case StatTypeChange.ChangeType.Change:
+                        value += changeField.Value;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+
+                return value;
+            }
+
+        }
+
+        [Serializable]
+        public class ControlledIntChange : StatTypeChange
+        {
+            public ChangeField<int> changeValue = new(ChangeType.None, 0);
+            public ChangeField<int> changeMax = new(ChangeType.None, 0);
+            public ChangeField<int> changeMin = new(ChangeType.None, 0);
+        }
+    }
+}
