@@ -34,7 +34,6 @@ namespace Mantega.Stats
             /// </summary>
             /// <param name="change">The change to be applied. This parameter cannot be <see cref="null"/></param>
             public abstract void ApplyChange([DisallowNull] U change);
-
         }
 
         /// <summary>

@@ -14,8 +14,8 @@ namespace Mantega.Stats
             public ControlledIntVariable Value => _value;
             public void ApplyChange(ControlledIntChange change)
             {
-                HandleIntChange(change.changeMax, ref _value.Max);
-                HandleIntChange(change.changeMin, ref _value.Min);
+                _value.Max = HandleIntChange(change.changeMax, _value.Max);
+                _value.Min = HandleIntChange(change.changeMin, _value.Min);
                 _value.Value = HandleIntChange(change.changeValue, _value.Value);
             }
 

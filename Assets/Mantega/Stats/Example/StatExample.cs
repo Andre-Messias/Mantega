@@ -1,6 +1,8 @@
 using UnityEngine;
+
+using Mantega.Syncables;
 using Mantega.Stats;
-using Mantega;
+using Mantega.Beta;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -13,8 +15,11 @@ public class StatExample : MonoBehaviour
     [SerializeField] private StatType.ControlledIntChange _changeInt;
 
     [Header("Syncable Example")]
+    [SerializeField] private Syncable<ControlledInt> _syncableControlledInt = new(new());
+    public IReadOnlySyncable<ControlledInt> SyncableInt => _syncableControlledInt;
+
     [SerializeField] private Syncable<int> _syncableInt = new(0);
-    public IReadOnlySyncable<int> SyncableInt => _syncableInt;
+    public IReadOnlySyncable<int> SyncableSimpleInt => _syncableInt;
 
     public void Test()
     {
@@ -23,23 +28,32 @@ public class StatExample : MonoBehaviour
 
     private void OnEnable()
     {
-        _syncableInt.OnValueChanged += DebugSyncableIntValue;
+        _syncableControlledInt.OnValueChanged += DebugSyncableControlledIntValue;
+        _syncableInt.OnValueChanged += DebugSyncableSimpleIntValue;
     }
 
     private void OnDisable()
     {
-        _syncableInt.OnValueChanged -= DebugSyncableIntValue;
+        _syncableControlledInt.OnValueChanged -= DebugSyncableControlledIntValue;
+        _syncableInt.OnValueChanged -= DebugSyncableSimpleIntValue;
     }
 
-    private void DebugSyncableIntValue(int oldValue, int newValue) => Debug.Log($"Syncable Int Changed: {oldValue} -> {newValue}");
+    private void DebugSyncableControlledIntValue(ControlledInt oldValue, ControlledInt newValue) => Debug.Log($"Syncable Int Changed: {oldValue} -> {newValue}");
+    private void DebugSyncableSimpleIntValue(int oldValue, int newValue) => Debug.Log($"Syncable Simple Int Changed: {oldValue} -> {newValue}");
 
 #if UNITY_EDITOR
     public void ApplyChange() => _statInt.ApplyChange(_changeInt);
 
-    public void ApplySyncableChange()
+    public void ApplySyncableControlledIntChange()
+    {
+        _syncableControlledInt.Value.Value += 1;
+        Debug.Log($"Syncable Int Changed: {_syncableControlledInt.Value}");
+    }
+
+    public void ApplySyncableSimpleIntChange()
     {
         _syncableInt.Value += 1;
-        Debug.Log($"Syncable Int Changed: {_syncableInt.Value}");
+        Debug.Log($"Syncable Simple Int Changed: {_syncableInt.Value}");
     }
 
 #endif
@@ -63,7 +77,7 @@ public class StatExampleEditor : Editor
 
         if (GUILayout.Button("Apply Syncable Change"))
         {
-            example.ApplySyncableChange();
+            example.ApplySyncableControlledIntChange();
         }
 
         if (GUILayout.Button("Test Action"))
