@@ -116,6 +116,9 @@ namespace Mantega.Stats
             }
 
 #if UNITY_EDITOR
+            /// <summary>
+            /// Defines a custom property drawer for the <see cref="ChangeField{T}"/> class, allowing it to be displayed
+            /// </summary>
             [CustomPropertyDrawer(typeof(ChangeField<>), true)]
             public class ChangeFieldDrawer : PropertyDrawer
             {

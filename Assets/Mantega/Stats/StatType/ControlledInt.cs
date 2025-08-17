@@ -3,13 +3,15 @@ using UnityEngine;
 
 namespace Mantega.Stats
 {
+    using ControlledIntVariable = Beta.ControlledInt;
+    
     public static partial class StatType
     {
         [Serializable]
-        public class ControlledInt : IStatType<Mantega.ControlledInt, ControlledIntChange>
+        public class ControlledInt : IStatType<ControlledIntVariable, ControlledIntChange>
         {
-            [SerializeField] private Mantega.ControlledInt _value;
-            public Mantega.ControlledInt Value => _value;
+            [SerializeField] private ControlledIntVariable _value;
+            public ControlledIntVariable Value => _value;
             public void ApplyChange(ControlledIntChange change)
             {
                 HandleIntChange(change.changeMax, ref _value.Max);
