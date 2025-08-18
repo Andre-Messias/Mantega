@@ -287,21 +287,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _statInt:
     _value:
-      _value: 0
-      Max: 11
-      Min: 0
+      _value: 9
+      _max: 47
+      _min: -25
   _changeInt:
     changeValue:
-      _type: 0
-      _value: 0
+      _type: 1
+      _value: 9
     changeMax:
       _type: 0
-      _value: 11
+      _value: 47
     changeMin:
-      _type: 0
+      _type: 1
+      _value: -25
+  _syncableControlledInt:
+    _value:
       _value: 0
+      _max: 0
+      _min: 0
   _syncableInt:
-    _value: 34
+    _value: 26
 --- !u!4 &1184407398
 Transform:
   m_ObjectHideFlags: 0

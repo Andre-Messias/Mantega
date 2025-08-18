@@ -8,20 +8,19 @@ namespace Mantega.Stats
     public static partial class StatType
     {
         [Serializable]
-        public class ControlledInt : IStatType<ControlledIntVariable, ControlledIntChange>
+        public class ControlledInt : StatTypeBase<ControlledIntVariable, ControlledIntChange>
         {
             [SerializeField] private ControlledIntVariable _value;
-            public ControlledIntVariable Value => _value;
-            public void ApplyChange(ControlledIntChange change)
+            public override ControlledIntVariable Value => _value;
+            protected override void ApplyChangeLogic(ControlledIntChange change)
             {
                 _value.Max = HandleIntChange(change.changeMax, _value.Max);
                 _value.Min = HandleIntChange(change.changeMin, _value.Min);
                 _value.Value = HandleIntChange(change.changeValue, _value.Value);
             }
 
-            private int HandleIntChange(StatTypeChange.ChangeField<int> changeField, int value) => HandleIntChange(changeField, ref value);
 
-            private int HandleIntChange(StatTypeChange.ChangeField<int> changeField, ref int value)
+            private int HandleIntChange(StatTypeChange.ChangeField<int> changeField, int value)
             {
                 switch (changeField.Type)
                 {

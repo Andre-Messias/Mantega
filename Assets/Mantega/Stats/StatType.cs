@@ -37,6 +37,54 @@ namespace Mantega.Stats
         }
 
         /// <summary>
+        /// Represents a base type for managing and applying changes to a value, with support for change notifications
+        /// </summary>
+        /// <remarks>This abstract class provides a framework for managing a value of type <typeparamref
+        /// name="T"/> and applying changes of type <typeparamref name="U"/>.  It includes an event for notifying
+        /// subscribers when a change is applied and defines an abstract method for implementing custom change
+        /// application logic. Derived classes must implement the <see cref="ApplyChangeLogic"/> method to define how
+        /// changes are applied.</remarks>
+        /// <typeparam name="T">The type of the value being managed</typeparam>
+        /// <typeparam name="U">The type of the change being applied, which must derive from <see cref="StatTypeChange"/></typeparam>
+        public abstract class StatTypeBase<T, U> : IStatType<T, U> where U : StatTypeChange
+        {
+            /// <summary>
+            /// Occurs when a change is applied
+            /// </summary>
+            /// <remarks>This event is triggered whenever a change is applied, passing the new <see cref="Value"/> and the change <typeparamref name="U"/>. 
+            /// Subscribers can use this event to handle
+            /// or respond to the applied changes</remarks>
+            public event Action<T, U> OnApplyChange;
+
+            /// <summary>
+            /// Gets the current value of the object
+            /// </summary>
+            public abstract T Value { get; }
+
+            /// <summary>
+            /// Applies the specified change to the current value and triggers the change notification event
+            /// </summary>
+            /// <remarks>This method applies the provided change using internal logic and then invokes
+            /// the <see cref="OnApplyChange"/> event, passing the updated value and the applied change as arguments.
+            /// Subscribers to the event can use this to react to the change</remarks>
+            /// <param name="change">The change to apply. Cannot be <see langword="null"/></param>
+            public void ApplyChange([DisallowNull] U change)
+            {
+                ApplyChangeLogic(change);
+                OnApplyChange?.Invoke(Value, change);
+            }
+
+            /// <summary>
+            /// Applies the specified change to the current state of the object
+            /// </summary>
+            /// <remarks>This method is abstract and must be implemented by derived classes to define
+            /// the specific logic for applying a change of type <typeparamref name="U"/>. The implementation should
+            /// ensure that the change is applied in a consistent and valid manner</remarks>
+            /// <param name="change">The change to be applied. This parameter must not be null</param>
+            protected abstract void ApplyChangeLogic([DisallowNull] U change);
+        }
+
+        /// <summary>
         /// Represents a base class for defining changes to a <see cref="IStatType{T, U}"/>, including the type of change and its associated
         /// value
         /// </summary>

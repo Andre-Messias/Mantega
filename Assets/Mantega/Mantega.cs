@@ -177,30 +177,28 @@ namespace Mantega
             public int Value
             {
                 get => _value;
-                set => Set(value, ref _value);
+                set => SetValue(value);
             }
 
             [SerializeField, CallOnChange(nameof(OnEditorChange))] private int _max;
             public int Max
             {
                 get => _max;
-                set => Set(value, ref _max);
+                set => SetMax(value);
             }
 
             [SerializeField, CallOnChange(nameof(OnEditorChange))] private int _min;
             public int Min
             {
                 get => _min;
-                set => Set(value, ref _min);
+                set => SetMin(value);
             }
 
             public event Action<ControlledInt> OnInternalChange;
 
-            public void Set(int newValue, ref int reference)
-            {
-                reference = Mathf.Clamp(newValue, Min, Max);
-                OnInternalChange?.Invoke(this);
-            }
+            public void SetValue(int value) => _value = Mathf.Clamp(value, _min, _max);
+            public void SetMax(int max) => _max = Mathf.Max(_min, max);
+            public void SetMin(int min) => _min = Mathf.Min(_max, min);
 
             private void OnEditorChange(int oldV, int newV)
             {
