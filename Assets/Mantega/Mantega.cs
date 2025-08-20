@@ -10,6 +10,19 @@ using System.Reflection;
 
 namespace Mantega
 {
+    /// <summary>
+    /// Defines a mechanism for creating a strongly-typed copy of an object
+    /// </summary>
+    /// <typeparam name="T">The type of the object to be cloned</typeparam>
+    public interface ITypedClonable<T>
+    {
+        /// <summary>
+        /// Creates a new instance of the current object with the same values as this instance
+        /// </summary>
+        /// <returns>A new instance of type <typeparamref name="T"/> that is a copy of the current instance</returns>
+        public T Clone();
+    }
+
     namespace Syncables
     {
         using Editor;
@@ -31,9 +44,26 @@ namespace Mantega
             /// Occurs when the value changes, providing the previous and current values
             /// </summary>
             /// <remarks>This event is triggered whenever the value is updated. The first parameter represents
-            /// the previous value,  and the second parameter represents the new value. Subscribers can use this event to
-            /// react to changes  in the value</remarks>
+            /// the previous value, and the second parameter represents the new value. Subscribers can use this event to
+            /// react to changes in the value</remarks>
             public event Action<T, T> OnValueChanged;
+        }
+
+        /// <summary>
+        /// Represents an interface for notifying subscribers about internal changes
+        /// </summary>
+        /// <remarks>This interface defines an event that is triggered whenever an internal change occurs.
+        /// Implementers of this interface can use the <see cref="OnInternalChange"/> event to notify subscribers about
+        /// state changes or other relevant updates</remarks>
+        public interface IInternalChange<T> : ITypedClonable<T>
+        {
+            /// <summary>
+            /// Occurs when a change is detected, providing the old and new values of the changed item
+            /// </summary>
+            /// <remarks>This event is triggered whenever an internal change occurs. The first parameter represents
+            /// the previous value, and the second parameter represents the new value. Subscribers can use this event to react to changes in
+            /// the state or data</remarks>
+            event Action<T, T> OnInternalChange;
         }
 
         /// <summary>
@@ -41,27 +71,11 @@ namespace Mantega
         /// changes
         /// </summary>
         /// <remarks>The <see cref="Syncable{T}"/> class provides a mechanism to track changes to a value and
-        /// notify listeners via the <see cref="OnValueChanged"/> event</remarks>
-        /// <typeparam name="T">The type of the value being synchronized</typeparam>
+        /// notify listeners via the <see cref="OnValueChanged"/> event. If <typeparamref name="T"/> have internal changes it must implement <see cref="IInternalChange{T}"/></remarks>
+        /// <typeparam name="T">The type of the value being synchronized, if it has internal changes it must implement <see cref="IInternalChange{T}"/></typeparam>
         [Serializable]
         public class Syncable<T> : IReadOnlySyncable<T>
         {
-            /// <summary>
-            /// Represents an interface for notifying subscribers about internal changes
-            /// </summary>
-            /// <remarks>This interface defines an event that is triggered whenever an internal change occurs.
-            /// Implementers of this interface can use the <see cref="OnInternalChange"/> event to notify subscribers about
-            /// state changes or other relevant updates</remarks>
-            public interface IInternalChange
-            {
-                /// <summary>
-                /// Occurs when an internal change is detected
-                /// </summary>
-                /// <remarks>This event is triggered whenever an internal state change occurs. 
-                /// Subscribers can use this event to react to changes in the internal state</remarks>
-                event Action<T> OnInternalChange;
-            }
-
             // VALUE
             // [Header("Value")]
 
@@ -97,8 +111,8 @@ namespace Mantega
             /// Occurs when the value changes, providing the previous and current <typeparamref name="T"/> values
             /// </summary>
             /// <remarks>This event is triggered whenever the value is updated or an internal change happen (in this case oldValue == newValue). The first parameter represents
-            /// the previous value,  and the second parameter represents the new value. Subscribers can use this event to
-            /// respond to changes  in the value</remarks>
+            /// the previous value, and the second parameter represents the new value. Subscribers can use this event to
+            /// respond to changes in the value</remarks>
             public event Action<T, T> OnValueChanged;
 
             /// <summary>
@@ -117,14 +131,14 @@ namespace Mantega
 
             private void SetValue(T newValue)
             {
-                if (_value is IInternalChange oldInternalChange)
+                if (_value is IInternalChange<T> oldInternalChange)
                 {
                     oldInternalChange.OnInternalChange -= HandleInternalChange;
                 }
 
                 _value = newValue;
 
-                if (_value is IInternalChange newInternalChange)
+                if (_value is IInternalChange<T> newInternalChange)
                 {
                     newInternalChange.OnInternalChange += HandleInternalChange;
                 }
@@ -137,9 +151,9 @@ namespace Mantega
             /// both the old and new values. It is intended for internal use to propagate changes within the
             /// system</remarks>
             /// <param name="internalValue">The change value</param>
-            private void HandleInternalChange(T internalValue)
+            private void HandleInternalChange(T oldValue, T newValue)
             {
-                OnValueChanged?.Invoke(_value, _value);
+                OnValueChanged?.Invoke(oldValue, newValue);
             }
 
             /// <summary>
@@ -164,47 +178,104 @@ namespace Mantega
         }
     }
 
-
     namespace Beta
     {
         using Syncables;
+#if UNITY_EDITOR
         using Editor;
+#endif
 
         [Serializable]
-        public class ControlledInt : Syncable<ControlledInt>.IInternalChange
+        public class ControlledInt : IInternalChange<ControlledInt>
         {
-            [SerializeField, CallOnChange(nameof(OnEditorChange))] private int _value;
+#if UNITY_EDITOR
+            [CallOnChange(nameof(OnEditorChangeValue))]
+#endif
+            [SerializeField] private int _value;
             public int Value
             {
                 get => _value;
                 set => SetValue(value);
             }
 
-            [SerializeField, CallOnChange(nameof(OnEditorChange))] private int _max;
+#if UNITY_EDITOR
+            [CallOnChange(nameof(OnEditorChangeMax))]
+#endif
+            [SerializeField] private int _max;
             public int Max
             {
                 get => _max;
                 set => SetMax(value);
             }
 
-            [SerializeField, CallOnChange(nameof(OnEditorChange))] private int _min;
+#if UNITY_EDITOR
+            [CallOnChange(nameof(OnEditorChangeMin))]
+#endif
+            [SerializeField] private int _min;
             public int Min
             {
                 get => _min;
                 set => SetMin(value);
             }
 
-            public event Action<ControlledInt> OnInternalChange;
+            public event Action<ControlledInt, ControlledInt> OnInternalChange;
 
-            public void SetValue(int value) => _value = Mathf.Clamp(value, _min, _max);
-            public void SetMax(int max) => _max = Mathf.Max(_min, max);
-            public void SetMin(int min) => _min = Mathf.Min(_max, min);
+            #region Value Change Logic
 
-            private void OnEditorChange(int oldV, int newV)
+            public int SetValue(int value) => _value = Mathf.Clamp(value, _min, _max);
+            public int SetMax(int max) => _max = Mathf.Max(_min, max);
+            public int SetMin(int min) => _min = Mathf.Min(_max, min);
+
+            #endregion
+
+            #region String
+            public override string ToString()
             {
-                Debug.Log($"ControlledInt changed: {oldV} -> {newV}");
-                OnInternalChange?.Invoke(this);
+                return $"{nameof(ControlledInt)}: Value={_value}, Min={_min}, Max={_max}";
             }
+            #endregion
+
+            #region Cloneable Implementation
+            public ControlledInt Clone()
+            {
+                return new ControlledInt
+                {
+                    _value = this._value,
+                    _max = this._max,
+                    _min = this._min
+                };
+            }
+
+            #endregion
+
+#if UNITY_EDITOR
+            private void OnEditorChangeMax(int oldV, int newV)
+            {
+                ControlledInt clone = Clone();
+                clone._max = oldV;
+
+                _max = SetMax(newV);
+                OnInternalChange?.Invoke(clone, this);
+            }
+
+            private void OnEditorChangeMin(int oldV, int newV)
+            {
+                ControlledInt clone = Clone();
+                clone._min = oldV;
+
+                _min = SetMin(newV);
+                OnInternalChange?.Invoke(clone, this);
+            }
+
+            private void OnEditorChangeValue(int oldV, int newV)
+            {
+                ControlledInt clone = Clone();
+                clone._value = oldV;
+
+                newV = SetValue(newV);
+                OnInternalChange?.Invoke(clone, this);
+            }
+#endif
         }
     }
 
@@ -214,7 +285,7 @@ namespace Mantega
         /// Specifies that a method should be invoked when the value of the decorated field changes
         /// </summary>
         /// <remarks>This attribute is applied to fields to indicate that a specific method should be called
-        /// whenever the field's value changes.  The method specified by <paramref name="methodName"/> must exist in the
+        /// whenever the field's value changes. The method specified by <paramref name="methodName"/> must exist in the
         /// same class as the decorated field</remarks>
         [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
         public class CallOnChangeAttribute : PropertyAttribute
@@ -235,6 +306,9 @@ namespace Mantega
         }
 
 #if UNITY_EDITOR
+        /// <summary>
+        /// Drawer for the <see cref="CallOnChangeAttribute"/> that invokes a method when the property changes
+        /// </summary>
         [CustomPropertyDrawer(typeof(CallOnChangeAttribute))]
         public class CallOnChangeDrawer : PropertyDrawer
         {
@@ -280,13 +354,26 @@ namespace Mantega
                 }
             }
 
-            // This makes the drawer work for properties with children (like Vectors)
+            /// <summary>
+            /// Calculates the height, in pixels, required to render the specified property in the Unity Editor
+            /// </summary>
+            /// <param name="property">The <see cref="SerializedProperty"/> to calculate the height for</param>
+            /// <param name="label">The label to display alongside the property in the Unity Editor</param>
+            /// <returns>The height, in pixels, required to render the property, including any child properties if applicable</returns>
             public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
             {
                 return EditorGUI.GetPropertyHeight(property, label, true);
             }
 
-            // Walks SerializedProperty path to get the actual C# object that owns the field
+            /// <summary>
+            /// Retrieves the parent object of the specified serialized property
+            /// </summary>
+            /// <remarks>This method traverses the property path of the given <see
+            /// cref="SerializedProperty"/> to locate its parent object. It uses reflection to access fields, including
+            /// private and public fields, along the property path</remarks>
+            /// <param name="property">The <see cref="SerializedProperty"/> for which the parent object is to be retrieved</param>
+            /// <returns>The parent object of the specified serialized property, or <see langword="null"/> if the parent object
+            /// cannot be determined</returns>
             private static object GetParentObject(SerializedProperty property)
             {
                 object obj = property.serializedObject.targetObject;

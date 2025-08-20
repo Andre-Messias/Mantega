@@ -155,6 +155,12 @@ namespace Mantega.Stats
                 /// </summary>
                 public T Value => _value;
 
+                /// <summary>
+                /// Initializes a new instance of the <see cref="ChangeField{T}"/> class with the specified change type
+                /// and value
+                /// </summary>
+                /// <param name="type">The type of change being represented</param>
+                /// <param name="value">The value associated with the change</param>
                 public ChangeField(ChangeType type, T value)
                 {
                     _type = type;
@@ -169,7 +175,16 @@ namespace Mantega.Stats
             [CustomPropertyDrawer(typeof(ChangeField<>), true)]
             public class ChangeFieldDrawer : PropertyDrawer
             {
-                // Draws the property in the Inspector
+                /// <summary>
+                /// Renders the custom GUI for <see cref="ChangeFieldDrawer"/> in the Unity Editor
+                /// </summary>
+                /// <remarks>This method customizes the rendering of a property by displaying a
+                /// type field and, conditionally, a value field based on the selected type. The <see cref="ChangeField{T}._type"/>  field
+                /// determines the <see cref="ChangeType"/> and controls whether the <see cref="ChangeField{T}._value"/> field is
+                /// displayed</remarks>
+                /// <param name="position">The rectangle on the screen to use for the property GUI</param>
+                /// <param name="property">The serialized property to render, which must contain a relative <see cref="ChangeField{T}._type"/>  and <see cref="ChangeField{T}._value"/> field</param>
+                /// <param name="label">The label to display alongside the property field</param>
                 public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
                 {
                     // Properties
@@ -201,7 +216,16 @@ namespace Mantega.Stats
                     EditorGUI.EndProperty();
                 }
 
-                // Returns the height needed to draw the property in the Inspector
+                /// <summary>
+                /// Calculates the height, in pixels, required to render the <see cref="ChangeFieldDrawer"/>
+                /// </summary>
+                /// <remarks>The height calculation includes the base line height for the property
+                /// and, if the <see cref="ChangeField{T}._type"/> field indicates a value other than <see cref="ChangeType.None"/>, additional
+                /// height for rendering the associated value field is included</remarks>
+                /// <param name="property">The serialized property to calculate the height for. Must contain a <see cref="ChangeField{T}._type"/> field of type <see
+                /// cref="ChangeType"/></param>
+                /// <param name="label">The label used for the property in the inspector</param>
+                /// <returns>The total height, in pixels, required to render the property</returns>
                 public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
                 {
                     // Line height for the type field
