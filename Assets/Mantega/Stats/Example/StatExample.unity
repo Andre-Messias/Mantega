@@ -266,6 +266,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1184407398}
   - component: {fileID: 1184407397}
+  - component: {fileID: 1184407399}
   m_Layer: 0
   m_Name: ExampleManager
   m_TagString: Untagged
@@ -302,9 +303,9 @@ MonoBehaviour:
       _value: -25
   _syncableControlledInt:
     _value:
-      _value: 0
-      _max: 0
-      _min: 0
+      _value: 237
+      _max: 341
+      _min: -66
   _syncableInt:
     _value: 26
 --- !u!4 &1184407398
@@ -322,6 +323,28 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1184407399
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1184407396}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a6077cd836707448b846c387e7e0ef3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  serializedS: dsad
+  serializedI: 0
+  serializedObj:
+    _json: '{"_value":{"_value":-30,"_max":332,"_min":-128},"$type":"Mantega.Stats.StatType+ControlledInt"}'
+    _objectReferences: []
+  controlledInt:
+    _value:
+      _value: -30
+      _max: 332
+      _min: -128
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

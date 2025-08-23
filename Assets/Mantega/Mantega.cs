@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Reflection;
 
 #if UNITY_EDITOR
 using UnityEditor;
-using System.Reflection;
 #endif
 
 namespace Mantega
@@ -21,6 +22,63 @@ namespace Mantega
         /// </summary>
         /// <returns>A new instance of type <typeparamref name="T"/> that is a copy of the current instance</returns>
         public T Clone();
+    }
+
+    namespace Reflection
+    {
+        /// <summary>
+        /// Provides utility methods for working with reflection, such as discovering types that implement specific
+        /// interfaces
+        /// </summary>
+        /// <remarks>This class is designed to simplify common reflection tasks, such as finding types
+        /// that implement a specific generic interface. It operates on the current application domain and handles
+        /// scenarios where some assemblies may not be fully loadable due to reflection issues</remarks>
+        public static class ReflectionUtils
+        {
+            /// <summary>
+            /// Finds all non-abstract classes in the current application domain that implement a specified generic
+            /// interface type
+            /// </summary>
+            /// <remarks>This method scans all loaded assemblies in the current application domain to
+            /// find classes that implement the specified generic interface. Assemblies that cannot be fully loaded due
+            /// to reflection issues are skipped</remarks>
+            /// <param name="genericInterfaceType">The generic interface type definition to search for. This must be an interface and a generic type
+            /// definition</param>
+            /// <returns>A list of <see cref="Type"/> objects representing the classes that implement the specified generic
+            /// interface type. The list will be empty if no matching classes are found</returns>
+            /// <exception cref="ArgumentException">Thrown if <paramref name="genericInterfaceType"/> is not an interface or is not a generic type
+            /// definition</exception>
+            public static List<Type> FindAllClassesOfInterface(Type genericInterfaceType)
+            {
+                if (!genericInterfaceType.IsInterface || !genericInterfaceType.IsGenericTypeDefinition)
+                {
+                    throw new ArgumentException("O tipo fornecido deve ser uma definição de interface genérica.", nameof(genericInterfaceType));
+                }
+
+                // All loaded assemblies in the current application domain
+                return AppDomain.CurrentDomain.GetAssemblies()
+                    .SelectMany(assembly =>
+                    {
+                        // To avoid issues with assemblies that cannot be loaded, we catch the ReflectionTypeLoadException
+                        try
+                        {
+                            return assembly.GetTypes();
+                        }
+                        catch (ReflectionTypeLoadException)
+                        {
+                            return Enumerable.Empty<Type>();
+                        }
+                    })
+                    .Where(type =>
+                        !type.IsAbstract &&                                       // Non abstract classes only
+                        !type.IsInterface &&                                      // Non interfaces only
+                        type.GetInterfaces().Any(i =>                             // Get all implemented interfaces and check if any of them...
+                            i.IsGenericType &&                                    // Generic interface?
+                            i.GetGenericTypeDefinition() == genericInterfaceType  // Is the generic type definition the same as the one we're looking for?
+                        )
+                    ).ToList();
+            }
+        }
     }
 
     namespace Syncables
@@ -185,6 +243,7 @@ namespace Mantega
         using Editor;
 #endif
 
+        #region ControlledInt
         [Serializable]
         public class ControlledInt : IInternalChange<ControlledInt>
         {
@@ -277,10 +336,65 @@ namespace Mantega
             }
 #endif
         }
+
+
+        #endregion
+
+        [Serializable]
+        public class Primitive<T> : IInternalChange<Primitive<T>>
+        {
+#if UNITY_EDITOR
+            [CallOnChange(nameof(OnEditorChangeValue))]
+#endif
+            [SerializeField] private int _value;
+            public int Value
+            {
+                get => _value;
+                set => SetValue(value);
+            }
+
+            public event Action<Primitive<T>, Primitive<T>> OnInternalChange;
+
+            #region Value Change Logic
+
+            public int SetValue(int value) => _value = value;
+            #endregion
+
+            #region String
+            public override string ToString()
+            {
+                return $"{nameof(Primitive<T>)}: Value={_value}";
+            }
+            #endregion
+
+            #region Cloneable Implementation
+            public Primitive<T> Clone()
+            {
+                return new Primitive<T>
+                {
+                    _value = this._value,
+                };
+            }
+
+            #endregion
+
+#if UNITY_EDITOR
+            private void OnEditorChangeValue(int oldV, int newV)
+            {
+                Primitive<T> clone = Clone();
+                clone._value = oldV;
+
+                newV = SetValue(newV);
+                OnInternalChange?.Invoke(clone, this);
+            }
+#endif
+        }
     }
 
     namespace Editor
     {
+
+        #region CallOnChange
         /// <summary>
         /// Specifies that a method should be invoked when the value of the decorated field changes
         /// </summary>
@@ -393,6 +507,8 @@ namespace Mantega
             }
         }
 #endif
+        #endregion
 
+        
     }
 }

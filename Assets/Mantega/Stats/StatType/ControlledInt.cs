@@ -1,4 +1,5 @@
 using System;
+using UnityEditor;
 using UnityEngine;
 
 namespace Mantega.Stats
@@ -19,7 +20,6 @@ namespace Mantega.Stats
                 _value.Value = HandleIntChange(change.changeValue, _value.Value);
             }
 
-
             private int HandleIntChange(StatTypeChange.ChangeField<int> changeField, int value)
             {
                 switch (changeField.Type)
@@ -39,6 +39,10 @@ namespace Mantega.Stats
                 return value;
             }
 
+            public override string ToString()
+            {
+                return $"{_value.Value} (Min: {_value.Min}, Max: {_value.Max})";
+            }
         }
 
         [Serializable]
