@@ -10,6 +10,8 @@ using UnityEditor;
 
 public class StatExample : MonoBehaviour
 {
+    [SerializeField] private StatType.Primitive _statPrimitive;
+
     [Header("Stat Example")]
     [SerializeField] private StatType.ControlledInt _statInt;
     [SerializeField] private StatType.ControlledIntChange _changeInt;
@@ -23,7 +25,7 @@ public class StatExample : MonoBehaviour
 
     public void Test()
     {
-        Debug.Log("Stat Example Test");
+        Debug.Log(typeof(StatType.Wrapper<int>).FullName);
     }
 
     private void OnEnable()

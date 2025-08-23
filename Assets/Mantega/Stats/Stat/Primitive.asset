@@ -12,11 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b0ae5c8a6b6db84bb9e3e430cd265e0, type: 3}
   m_Name: Primitive
   m_EditorClassIdentifier: 
-  StatName: New Stat
+  StatName: Primitivo
   _data:
-    rid: -2
+    rid: 829775571201818943
   references:
     version: 2
     RefIds:
-    - rid: -2
-      type: {class: , ns: , asm: }
+    - rid: 829775571201818943
+      type: {class: Float, ns: Mantega.Beta, asm: Assembly-CSharp}
+      data:
+        _value: 0

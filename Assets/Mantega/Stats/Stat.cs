@@ -72,6 +72,7 @@ public class StatEditor : Editor
         // Change Stat Type
         if (newIndex != _currentIndex)
         {
+            Debug.Log($"Changing Stat Type to: {_typeNames[newIndex]} ");
             _currentIndex = newIndex;
             _currentType = _statTypes[newIndex];
             if (_currentType == null)
