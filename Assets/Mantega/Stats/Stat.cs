@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 using static Mantega.Stats.StatType;
-using Mantega.Editor;
 
 #if UNITY_EDITOR
 using System.Linq;
@@ -11,7 +10,7 @@ using UnityEditor;
 #endif
 
 [CreateAssetMenu(fileName = "NewStat", menuName = "Stat/Stat")]
-public class Stat : ScriptableObject//, ISerializationCallbackReceiver
+public class Stat : ScriptableObject
 {
     public string StatName = "New Stat";
 
@@ -22,50 +21,10 @@ public class Stat : ScriptableObject//, ISerializationCallbackReceiver
         set => _data = value;
     }
 
-    /*[SerializeField] private SerializationData _serializedData;
-
-    public void OnBeforeSerialize()
-    {
-        _serializedData = Data.Serialize();
-    }
-
-    public void OnAfterDeserialize()
-    {
-        Data = _serializedData.Deserialize();
-    }*/
-
     public void Log()
     {
         Debug.Log($"{_data?.GetType()}: {_data}");
     }
-}
-
-public class Float : IStatType<float, FloatChange>
-{
-    [SerializeField] private float _value;
-    public float Value => _value;
-
-    public void ApplyChange(FloatChange change)
-    {
-        switch (change._field.Type)
-        {
-            case StatTypeChange.ChangeType.None:
-                break;
-            case StatTypeChange.ChangeType.Set:
-                _value = change._field.Value;
-                break;
-            case StatTypeChange.ChangeType.Change:
-                _value += change._field.Value;
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-    }
-}
-
-public class FloatChange : StatTypeChange
-{
-    public ChangeField<float> _field = new(ChangeType.None, 0);
 }
 
 #if UNITY_EDITOR
@@ -91,12 +50,14 @@ public class StatEditor : Editor
 
         Stat stat = (Stat)target;
         _currentType = stat.Data?.GetType();
-        Debug.Log($"Current Type: {_currentType}");
         if (_currentType != null && !string.IsNullOrEmpty(_currentType.AssemblyQualifiedName))
         {
             _currentIndex = _statTypes.FindIndex(t => t != null && t.AssemblyQualifiedName == _currentType.AssemblyQualifiedName);
         }
-        Debug.Log($"Current Index: {_currentIndex}");
+        else
+        {
+            _currentIndex = 0;
+        }
     }
 
     public override void OnInspectorGUI()
@@ -105,8 +66,10 @@ public class StatEditor : Editor
 
         EditorGUILayout.PropertyField(_statNameProp);
 
+        // Dropdown for Stat Type
         int newIndex = EditorGUILayout.Popup("Stat Type", _currentIndex, _typeNames);
-        
+
+        // Change Stat Type
         if (newIndex != _currentIndex)
         {
             _currentIndex = newIndex;
@@ -124,13 +87,14 @@ public class StatEditor : Editor
         EditorGUILayout.Space();
         serializedObject.ApplyModifiedProperties();
 
+        // Data Field
         if (_dataProp.managedReferenceValue != null)
         {
             EditorGUILayout.PropertyField(_dataProp, true);
         }
         else
         {
-            EditorGUILayout.HelpBox("Selecione um 'Stat Type' para configurar seus valores.", MessageType.Info);
+            EditorGUILayout.HelpBox("Selecione um 'Stat Type' para configurar seus valores", MessageType.Info);
         }
 
         EditorGUILayout.Space();

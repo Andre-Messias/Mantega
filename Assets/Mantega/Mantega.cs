@@ -239,6 +239,8 @@ namespace Mantega
     namespace Beta
     {
         using Syncables;
+        using static Stats.StatType;
+
 #if UNITY_EDITOR
         using Editor;
 #endif
@@ -340,54 +342,32 @@ namespace Mantega
 
         #endregion
 
-        [Serializable]
-        public class Primitive<T> : IInternalChange<Primitive<T>>
+        public class Float : IStatType<float, FloatChange>
         {
-#if UNITY_EDITOR
-            [CallOnChange(nameof(OnEditorChangeValue))]
-#endif
-            [SerializeField] private int _value;
-            public int Value
+            [SerializeField] private float _value;
+            public float Value => _value;
+
+            public void ApplyChange(FloatChange change)
             {
-                get => _value;
-                set => SetValue(value);
-            }
-
-            public event Action<Primitive<T>, Primitive<T>> OnInternalChange;
-
-            #region Value Change Logic
-
-            public int SetValue(int value) => _value = value;
-            #endregion
-
-            #region String
-            public override string ToString()
-            {
-                return $"{nameof(Primitive<T>)}: Value={_value}";
-            }
-            #endregion
-
-            #region Cloneable Implementation
-            public Primitive<T> Clone()
-            {
-                return new Primitive<T>
+                switch (change._field.Type)
                 {
-                    _value = this._value,
-                };
+                    case StatTypeChange.ChangeType.None:
+                        break;
+                    case StatTypeChange.ChangeType.Set:
+                        _value = change._field.Value;
+                        break;
+                    case StatTypeChange.ChangeType.Change:
+                        _value += change._field.Value;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
             }
+        }
 
-            #endregion
-
-#if UNITY_EDITOR
-            private void OnEditorChangeValue(int oldV, int newV)
-            {
-                Primitive<T> clone = Clone();
-                clone._value = oldV;
-
-                newV = SetValue(newV);
-                OnInternalChange?.Invoke(clone, this);
-            }
-#endif
+        public class FloatChange : StatTypeChange
+        {
+            public ChangeField<float> _field = new(ChangeType.None, 0);
         }
     }
 
