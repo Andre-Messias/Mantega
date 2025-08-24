@@ -202,8 +202,11 @@ namespace Mantega.Stats
                 try
                 {
                     object value;
+
                     if (type == typeof(string))
                         value = string.Empty;
+                    else if (type == typeof(char))
+                        value = '&';
                     else
                         value = Activator.CreateInstance(type);
 

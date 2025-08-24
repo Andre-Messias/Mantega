@@ -285,12 +285,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3cf0122fb80b07a489e864188f8f45dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  character: 52
   _statPrimitive:
     _value:
       rid: 829775596353487149
   _changePrimitive:
     _value:
-      rid: 829775596353487150
+      rid: 829775596353487161
   _statInt:
     _value:
       _value: 0
@@ -320,7 +321,7 @@ MonoBehaviour:
       type: {class: 'StatType/WrapperManager/Wrapper`1[[System.Char, mscorlib]]', ns: Mantega.Stats, asm: Assembly-CSharp}
       data:
         Content: 98
-    - rid: 829775596353487150
+    - rid: 829775596353487161
       type: {class: 'StatType/WrapperManager/Wrapper`1[[System.Char, mscorlib]]', ns: Mantega.Stats, asm: Assembly-CSharp}
       data:
         Content: 0

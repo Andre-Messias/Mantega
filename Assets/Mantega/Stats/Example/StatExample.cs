@@ -10,6 +10,8 @@ using UnityEditor;
 
 public class StatExample : MonoBehaviour
 {
+    [SerializeField] private char character = 'A';
+
     [Header("Primitive Example")]
     [SerializeField] private StatType.Primitive _statPrimitive = new();
     [SerializeField] private StatType.PrimitiveChange _changePrimitive = new();
