@@ -287,35 +287,43 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _statPrimitive:
     _value:
-      rid: 829775571201818945
+      rid: 829775596353487149
+  _changePrimitive:
+    _value:
+      rid: 829775596353487150
   _statInt:
     _value:
-      _value: 9
-      _max: 47
-      _min: -25
+      _value: 0
+      _max: 0
+      _min: 0
   _changeInt:
     changeValue:
-      _type: 1
-      _value: 9
+      _type: 0
+      _value: 0
     changeMax:
       _type: 0
-      _value: 47
+      _value: 0
     changeMin:
       _type: 0
-      _value: -25
+      _value: 0
   _syncableControlledInt:
     _value:
-      _value: 237
-      _max: 341
-      _min: -66
+      _value: 0
+      _max: 0
+      _min: 0
   _syncableInt:
-    _value: 26
+    _value: 0
   references:
     version: 2
     RefIds:
-    - rid: 829775571201818945
-      type: {class: Int32, ns: System, asm: mscorlib}
-      data: 
+    - rid: 829775596353487149
+      type: {class: 'StatType/WrapperManager/Wrapper`1[[System.Char, mscorlib]]', ns: Mantega.Stats, asm: Assembly-CSharp}
+      data:
+        Content: 98
+    - rid: 829775596353487150
+      type: {class: 'StatType/WrapperManager/Wrapper`1[[System.Char, mscorlib]]', ns: Mantega.Stats, asm: Assembly-CSharp}
+      data:
+        Content: 0
 --- !u!4 &1184407398
 Transform:
   m_ObjectHideFlags: 0

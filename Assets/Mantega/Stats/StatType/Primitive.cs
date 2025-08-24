@@ -3,6 +3,8 @@ using UnityEngine;
 
 namespace Mantega.Stats
 {
+    using Mantega.Reflection;
+
 #if UNITY_EDITOR
     using Unity.VisualScripting;
     using UnityEditor;
@@ -10,8 +12,7 @@ namespace Mantega.Stats
 #endif
     public static partial class StatType
     {
-        [Serializable]
-        public class Primitive : StatTypeBase<object, PrimitiveChange>
+        private sealed class WrapperManager
         {
             public interface IWrapper
             {
@@ -29,23 +30,45 @@ namespace Mantega.Stats
                 }
 
                 public object GetValue() => Content;
+
+            }
+            public static object WrapperFromObject(object obj)
+            {
+                if(obj == null) return null;
+                Type genericWrapperType = typeof(Wrapper<>).MakeGenericType(obj.GetType());
+                object wrapper = Activator.CreateInstance(genericWrapperType, new object[] { obj });
+                return wrapper;
             }
 
-            [SerializeReference] private object _value;
+        }
+
+        [Serializable]
+        public class Primitive : StatTypeBase<object, PrimitiveChange>
+        {
+
+            [SerializeReference] private object _value = null;
             public override object Value
             {
                 get
                 {
-                    if (_value is IWrapper wrapper)
+                    if (_value is WrapperManager.IWrapper wrapper)
                         return wrapper.GetValue();
 
                     return _value;
                 }
             }
 
+            public Primitive(object content = null)
+            {
+                _value = WrapperManager.WrapperFromObject(content);
+            }
+
             protected override void ApplyChangeLogic(PrimitiveChange change)
             {
-                _value = change.Value;
+                if(ReflectionUtils.CanConvert(change.Value, Value, out object converted))
+                    _value = WrapperManager.WrapperFromObject(converted);
+                else 
+                    Debug.LogWarning($"Failed to convert {change.Value?.GetType()} to {Value?.GetType()}, no change was made");
             }
 
             public override string ToString()
@@ -54,16 +77,31 @@ namespace Mantega.Stats
             }
         }
 
+        [Serializable]
+        public class PrimitiveChange : StatTypeChange
+        {
+            [SerializeReference] public object _value;
+            public object Value
+            {
+                get
+                {
+                    if (_value is WrapperManager.IWrapper wrapper)
+                        return wrapper.GetValue();
 
+                    return _value;
+                }
+            }
+        }
+
+        #region Editor
 #if UNITY_EDITOR
-        [CustomPropertyDrawer(typeof(Primitive))]
-        public class PrimitiveDrawer : PropertyDrawer
+        public abstract class BasePrimitiveDrawer : PropertyDrawer
         {
             SerializedProperty _valueProp = null;
             private string _lastInput = "";
 
             private bool _initialized = false;
-            private void Initialize(SerializedProperty property)
+            protected void Initialize(SerializedProperty property)
             {
                 if (_initialized) return;
                 _initialized = true;
@@ -74,9 +112,9 @@ namespace Mantega.Stats
                 _lastInput = GetPropertyValue(_valueProp)?.GetType().FullName ?? "Null";
             }
 
-            private object GetPropertyValue(SerializedProperty property)
+            protected object GetPropertyValue(SerializedProperty property)
             {
-                if (_valueProp.managedReferenceValue is Primitive.IWrapper wrapper)
+                if (_valueProp.managedReferenceValue is WrapperManager.IWrapper wrapper)
                 {
                     return wrapper.GetValue();
                 }
@@ -133,9 +171,10 @@ namespace Mantega.Stats
                 {
                     if (GetPropertyValue(_valueProp) == null)
                     {
-                        if (!SetValueType(inputType)) Debug.LogError($"Failed to create instance of {inputType}");
-
-                        property.serializedObject.ApplyModifiedProperties();
+                        if (SetValueType(inputType)) 
+                            property.serializedObject.ApplyModifiedProperties();
+                        else 
+                            Debug.LogError($"Failed to create instance of {inputType}");
                     }
 
                     if(GetPropertyValue(_valueProp) != null)
@@ -158,7 +197,7 @@ namespace Mantega.Stats
                 EditorGUI.EndProperty();
             }
 
-            private bool SetValueType(Type type)
+            protected bool SetValueType(Type type)
             {
                 try
                 {
@@ -168,9 +207,7 @@ namespace Mantega.Stats
                     else
                         value = Activator.CreateInstance(type);
 
-                    Type genericWrapperType = typeof(Primitive.Wrapper<>).MakeGenericType(type);
-                    object wrapper = Activator.CreateInstance(genericWrapperType, new object[] { value });
-                    _valueProp.managedReferenceValue = wrapper;
+                    _valueProp.managedReferenceValue = WrapperManager.WrapperFromObject(value);
                     return true;
                 }
                 catch (Exception ex)
@@ -197,12 +234,12 @@ namespace Mantega.Stats
             }
         }
 
-#endif
+        [CustomPropertyDrawer(typeof(Primitive))]
+        public class PrimitiveDrawer : BasePrimitiveDrawer { }
 
-        [Serializable]
-        public class PrimitiveChange : StatTypeChange
-        {
-            [SerializeReference] public object Value;
-        }
+        [CustomPropertyDrawer(typeof(PrimitiveChange))]
+        public class PrimitiveChangeDrawer : BasePrimitiveDrawer { }
+#endif
+        #endregion
     }
 }

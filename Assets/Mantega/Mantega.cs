@@ -78,6 +78,75 @@ namespace Mantega
                         )
                     ).ToList();
             }
+
+            /// <summary>
+            /// Determines whether the specified <paramref name="sourceObject"/> can be converted to the type of 
+            /// <paramref name="targetObject"/> and, if possible, provides the converted value
+            /// </summary>
+            /// <remarks>This method attempts to convert the <paramref name="sourceObject"/> to the
+            /// type of  <paramref name="targetObject"/> using the following rules: <list type="bullet"> <item>If
+            /// <paramref name="sourceObject"/> is <see langword="null"/>, the method returns  <see langword="true"/> if
+            /// the target type is nullable; otherwise, it returns <see langword="false"/>.</item> <item>If <paramref
+            /// name="sourceObject"/> is already of the target type or a compatible type,  the method returns <see
+            /// langword="true"/> and assigns <paramref name="sourceObject"/> to  <paramref name="converted"/>.</item>
+            /// <item>If the conversion is possible using <see cref="Convert.ChangeType(object, Type)"/>, the method 
+            /// returns <see langword="true"/> and assigns the converted value to <paramref name="converted"/>.</item>
+            /// <item>If none of the above conditions are met, the method returns <see langword="false"/></item>
+            /// </list></remarks>
+            /// <param name="sourceObject">The object to be converted. Can be <see langword="null"/></param>
+            /// <param name="targetObject">An object whose type is used as the target type for the conversion.  Cannot be <see langword="null"/></param>
+            /// <param name="converted">When this method returns, contains the converted value if the conversion  was successful; otherwise,
+            /// <see langword="null"/></param>
+            /// <returns><see langword="true"/> if the <paramref name="sourceObject"/> can be converted to the type of  <paramref
+            /// name="targetObject"/>; otherwise, <see langword="false"/></returns>
+            public static bool CanConvert([NotNull] object sourceObject, [NotNull] object targetObject, out object converted)
+            {
+                converted = null;
+
+                if (targetObject == null)
+                {
+                    return false;
+                }
+
+                Type targetType = targetObject.GetType();
+
+                // Null source handling
+                if (sourceObject == null)
+                {
+                    // Non-nullable value types cannot be assigned null
+                    if (targetType.IsValueType && Nullable.GetUnderlyingType(targetType) == null)
+                    {
+                        return false;
+                    }
+
+                    // converted is already null
+                    return true;
+                }
+
+                Type sourceType = sourceObject.GetType();
+
+                // Is already the correct type
+                if (targetType.IsAssignableFrom(sourceType))
+                {
+                    converted = sourceObject;
+                    return true;
+                }
+
+                // Convertible via IConvertible
+                try
+                {
+                    converted = Convert.ChangeType(sourceObject, targetType);
+                    return true;
+                }
+                catch (Exception)
+                {
+                    // Ignora as exceções (InvalidCastException, FormatException, OverflowException) 
+                    // e tenta o próximo método.
+                }
+
+                // Unable to convert
+                return false;
+            }
         }
     }
 
@@ -493,7 +562,7 @@ namespace Mantega
 #if UNITY_EDITOR
         public sealed class MantegaStyles
         {
-            readonly static GUIStyle _jsonStyle = new GUIStyle(other: EditorStyles.helpBox)
+            readonly static GUIStyle _jsonStyle = new(EditorStyles.helpBox)
             {
                 padding = new RectOffset(10, 10, 10, 10),
                 wordWrap = true // Line wrap

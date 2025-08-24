@@ -10,7 +10,9 @@ using UnityEditor;
 
 public class StatExample : MonoBehaviour
 {
-    [SerializeField] private StatType.Primitive _statPrimitive;
+    [Header("Primitive Example")]
+    [SerializeField] private StatType.Primitive _statPrimitive = new();
+    [SerializeField] private StatType.PrimitiveChange _changePrimitive = new();
 
     [Header("Stat Example")]
     [SerializeField] private StatType.ControlledInt _statInt;
@@ -58,6 +60,8 @@ public class StatExample : MonoBehaviour
         Debug.Log($"Syncable Simple Int Changed: {_syncableInt.Value}");
     }
 
+    public void ApplyPrimitiveChange() => _statPrimitive.ApplyChange(_changePrimitive);
+
 #endif
 }
 
@@ -72,6 +76,11 @@ public class StatExampleEditor : Editor
         GUILayout.Space(EditorGUIUtility.standardVerticalSpacing);
 
         StatExample example = (StatExample)target;
+        if(GUILayout.Button("Apply Primitive Change"))
+        {
+            example.ApplyPrimitiveChange();
+        }
+
         if (GUILayout.Button("Apply Change"))
         {
             example.ApplyChange();
