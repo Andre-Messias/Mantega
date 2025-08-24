@@ -10,15 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1b0ae5c8a6b6db84bb9e3e430cd265e0, type: 3}
-  m_Name: Primitive
+  m_Name: Damage
   m_EditorClassIdentifier: 
-  StatName: Primitivo
+  StatName: Dano
   _data:
-    rid: 829775571201818943
+    rid: 829775596353487083
   references:
     version: 2
     RefIds:
-    - rid: 829775571201818943
-      type: {class: Float, ns: Mantega.Beta, asm: Assembly-CSharp}
+    - rid: 829775596353487083
+      type: {class: StatType/Primitive, ns: Mantega.Stats, asm: Assembly-CSharp}
       data:
-        _value: 0
+        _value:
+          rid: 829775596353487097
+    - rid: 829775596353487097
+      type: {class: 'StatType/Primitive/Wrapper`1[[System.Int32, mscorlib]]', ns: Mantega.Stats, asm: Assembly-CSharp}
+      data:
+        Content: 10

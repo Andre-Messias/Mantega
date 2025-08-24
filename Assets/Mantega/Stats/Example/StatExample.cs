@@ -25,7 +25,7 @@ public class StatExample : MonoBehaviour
 
     public void Test()
     {
-        Debug.Log(typeof(StatType.Wrapper<int>).FullName);
+        Debug.Log("Test");
     }
 
     private void OnEnable()

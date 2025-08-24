@@ -342,6 +342,7 @@ namespace Mantega
 
         #endregion
 
+        [Serializable]
         public class Float : IStatType<float, FloatChange>
         {
             [SerializeField] private float _value;
@@ -373,7 +374,6 @@ namespace Mantega
 
     namespace Editor
     {
-
         #region CallOnChange
         /// <summary>
         /// Specifies that a method should be invoked when the value of the decorated field changes
@@ -489,6 +489,19 @@ namespace Mantega
 #endif
         #endregion
 
-        
+        #region MantegaStyles
+#if UNITY_EDITOR
+        public sealed class MantegaStyles
+        {
+            readonly static GUIStyle _jsonStyle = new GUIStyle(other: EditorStyles.helpBox)
+            {
+                padding = new RectOffset(10, 10, 10, 10),
+                wordWrap = true // Line wrap
+            };
+
+            public static GUIStyle JsonStyle => _jsonStyle;
+        }
+#endif
+        #endregion
     }
 }

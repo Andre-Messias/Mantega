@@ -1,11 +1,14 @@
 using System;
 using UnityEngine;
 using static Mantega.Stats.StatType;
+using Unity.VisualScripting;
+
 
 #if UNITY_EDITOR
 using System.Linq;
 using System.Collections.Generic;
 using Mantega.Reflection;
+using Mantega.Editor;
 using UnityEditor;
 #endif
 
@@ -24,6 +27,7 @@ public class Stat : ScriptableObject
     public void Log()
     {
         Debug.Log($"{_data?.GetType()}: {_data}");
+        if (_data == null) return;
     }
 }
 
@@ -72,7 +76,6 @@ public class StatEditor : Editor
         // Change Stat Type
         if (newIndex != _currentIndex)
         {
-            Debug.Log($"Changing Stat Type to: {_typeNames[newIndex]} ");
             _currentIndex = newIndex;
             _currentType = _statTypes[newIndex];
             if (_currentType == null)
@@ -82,11 +85,17 @@ public class StatEditor : Editor
             else
             {
                 _dataProp.managedReferenceValue = Activator.CreateInstance(_currentType);
+                _dataProp.serializedObject.ApplyModifiedProperties();
             }
         }
+        EditorGUILayout.Space(5);
 
-        EditorGUILayout.Space();
-        serializedObject.ApplyModifiedProperties();
+        // Display JSON representation of Data
+        string json = _dataProp.managedReferenceValue != null ? _dataProp.managedReferenceValue.Serialize().json : "No Data";
+        float height = MantegaStyles.JsonStyle.CalcHeight(new GUIContent(json), EditorGUIUtility.currentViewWidth);
+        EditorGUILayout.SelectableLabel(json, MantegaStyles.JsonStyle, GUILayout.Height(height));
+
+        EditorGUILayout.Space(20);
 
         // Data Field
         if (_dataProp.managedReferenceValue != null)
@@ -95,9 +104,9 @@ public class StatEditor : Editor
         }
         else
         {
-            EditorGUILayout.HelpBox("Selecione um 'Stat Type' para configurar seus valores", MessageType.Info);
+            EditorGUILayout.HelpBox("Selecione a 'Stat Type'", MessageType.Info);
         }
-
+        serializedObject.ApplyModifiedProperties();
         EditorGUILayout.Space();
 
         if (GUILayout.Button("Log Data"))

@@ -14,11 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   StatName: Vida
   _data:
-    rid: 829775571201818935
+    rid: 829775596353487065
   references:
     version: 2
     RefIds:
-    - rid: 829775571201818935
-      type: {class: Float, ns: Mantega.Beta, asm: Assembly-CSharp}
+    - rid: 829775596353487065
+      type: {class: StatType/ControlledInt, ns: Mantega.Stats, asm: Assembly-CSharp}
       data:
-        _value: 0
+        _value:
+          _value: 100
+          _max: 100
+          _min: 0
