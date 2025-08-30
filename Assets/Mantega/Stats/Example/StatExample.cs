@@ -2,7 +2,7 @@ using UnityEngine;
 
 using Mantega.Syncables;
 using Mantega.Stats;
-using Mantega.Beta;
+using Mantega.Variables;
 
 #if UNITY_EDITOR
 using UnityEditor;

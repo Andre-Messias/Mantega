@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace Mantega.Stats
 {
-    using ControlledIntVariable = Beta.ControlledInt;
-    
+    using ControlledIntVariable = Variables.ControlledInt;
+
     public static partial class StatType
     {
         [Serializable]
