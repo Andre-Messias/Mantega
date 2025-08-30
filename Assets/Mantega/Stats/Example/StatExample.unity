@@ -285,13 +285,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3cf0122fb80b07a489e864188f8f45dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  character: 52
+  _statObject:
+    _stat: {fileID: 11400000, guid: c377f97e899de4741ac0c4cf3f48c07e, type: 2}
+    _data:
+      rid: 829775729466802366
+    _name: Dano
   _statPrimitive:
     _value:
-      rid: 829775596353487149
+      rid: 829775625778364420
   _changePrimitive:
     _value:
-      rid: 829775596353487161
+      rid: 829775625778364418
   _statInt:
     _value:
       _value: 0
@@ -317,14 +321,26 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 829775596353487149
-      type: {class: 'StatType/WrapperManager/Wrapper`1[[System.Char, mscorlib]]', ns: Mantega.Stats, asm: Assembly-CSharp}
+    - rid: 829775625778364418
+      type: {class: 'StatType/WrapperManager/Wrapper`1[[System.Single, mscorlib]]', ns: Mantega.Stats, asm: Assembly-CSharp}
       data:
-        Content: 98
-    - rid: 829775596353487161
-      type: {class: 'StatType/WrapperManager/Wrapper`1[[System.Char, mscorlib]]', ns: Mantega.Stats, asm: Assembly-CSharp}
+        Content: 1.78
+    - rid: 829775625778364420
+      type: {class: 'StatType/WrapperManager/Wrapper`1[[Mantega.Beta.ControlledInt, Assembly-CSharp]]', ns: Mantega.Stats, asm: Assembly-CSharp}
       data:
-        Content: 0
+        Content:
+          _value: 0
+          _max: 0
+          _min: 0
+    - rid: 829775729466802366
+      type: {class: StatType/Primitive, ns: Mantega.Stats, asm: Assembly-CSharp}
+      data:
+        _value:
+          rid: 829775729466802367
+    - rid: 829775729466802367
+      type: {class: 'StatType/WrapperManager/Wrapper`1[[System.Int32, mscorlib]]', ns: Mantega.Stats, asm: Assembly-CSharp}
+      data:
+        Content: 46
 --- !u!4 &1184407398
 Transform:
   m_ObjectHideFlags: 0

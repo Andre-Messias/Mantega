@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b0ae5c8a6b6db84bb9e3e430cd265e0, type: 3}
   m_Name: Damage
   m_EditorClassIdentifier: 
-  StatName: Dano
+  StatName: Damage
   _data:
     rid: 829775596353487083
   references:
@@ -22,8 +22,8 @@ MonoBehaviour:
       type: {class: StatType/Primitive, ns: Mantega.Stats, asm: Assembly-CSharp}
       data:
         _value:
-          rid: 829775596353487097
-    - rid: 829775596353487097
-      type: {class: 'StatType/Primitive/Wrapper`1[[System.Int32, mscorlib]]', ns: Mantega.Stats, asm: Assembly-CSharp}
+          rid: 829775729466802326
+    - rid: 829775729466802326
+      type: {class: 'StatType/WrapperManager/Wrapper`1[[System.Single, mscorlib]]', ns: Mantega.Stats, asm: Assembly-CSharp}
       data:
-        Content: 10
+        Content: 2.65

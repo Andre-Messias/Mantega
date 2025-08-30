@@ -22,7 +22,7 @@ namespace Mantega.Stats
             [Serializable]
             public struct Wrapper<T> : IWrapper
             {
-                public T Content;
+                [SerializeField] public T Content;
 
                 public Wrapper(T value)
                 {
@@ -45,8 +45,7 @@ namespace Mantega.Stats
         [Serializable]
         public class Primitive : StatTypeBase<object, PrimitiveChange>
         {
-
-            [SerializeReference] private object _value = null;
+            [SerializeReference, SerializeField] private object _value = null;
             public override object Value
             {
                 get
@@ -57,6 +56,8 @@ namespace Mantega.Stats
                     return _value;
                 }
             }
+
+            public Primitive() => _value = WrapperManager.WrapperFromObject(null);
 
             public Primitive(object content = null)
             {
@@ -73,6 +74,7 @@ namespace Mantega.Stats
 
             public override string ToString()
             {
+                if(_value == null) return "Null";
                 return _value.ToString();
             }
         }
@@ -180,7 +182,7 @@ namespace Mantega.Stats
                     if(GetPropertyValue(_valueProp) != null)
                     {
                         var valueRect = new Rect(position.x, currentY, position.width, EditorGUI.GetPropertyHeight(_valueProp, true));
-                        EditorGUI.PropertyField(valueRect, _valueProp, label, true);
+                        EditorGUI.PropertyField(valueRect, _valueProp, new("Value"), true);
 
                         // Display JSON representation of Value
                         string json = _valueProp.managedReferenceValue.Serialize().json;

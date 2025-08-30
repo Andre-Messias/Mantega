@@ -10,7 +10,8 @@ using UnityEditor;
 
 public class StatExample : MonoBehaviour
 {
-    [SerializeField] private char character = 'A';
+    [Header("Stat Object Example")]
+    [SerializeField] private StatObject _statObject;
 
     [Header("Primitive Example")]
     [SerializeField] private StatType.Primitive _statPrimitive = new();
@@ -29,7 +30,7 @@ public class StatExample : MonoBehaviour
 
     public void Test()
     {
-        Debug.Log("Test");
+        _statObject.PrintType();
     }
 
     private void OnEnable()
@@ -48,6 +49,7 @@ public class StatExample : MonoBehaviour
     private void DebugSyncableSimpleIntValue(int oldValue, int newValue) => Debug.Log($"Syncable Simple Int Changed: {oldValue} -> {newValue}");
 
 #if UNITY_EDITOR
+
     public void ApplyChange() => _statInt.ApplyChange(_changeInt);
 
     public void ApplySyncableControlledIntChange()
