@@ -12,18 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b0ae5c8a6b6db84bb9e3e430cd265e0, type: 3}
   m_Name: NewStat
   m_EditorClassIdentifier: 
-  StatName: New Stat
+  StatName: Velocidade
   _data:
-    rid: 829775729466802341
+    rid: 8850248414007918593
   references:
     version: 2
     RefIds:
-    - rid: 829775729466802341
+    - rid: 8850248414007918593
       type: {class: StatType/Primitive, ns: Mantega.Stats, asm: Assembly-CSharp}
       data:
         _value:
-          rid: 829775729466802342
-    - rid: 829775729466802342
-      type: {class: 'StatType/WrapperManager/Wrapper`1[[System.Int32, mscorlib]]', ns: Mantega.Stats, asm: Assembly-CSharp}
+          rid: 8850248414007918594
+    - rid: 8850248414007918594
+      type: {class: 'StatType/WrapperManager/Wrapper`1[[System.Single, mscorlib]]', ns: Mantega.Stats, asm: Assembly-CSharp}
       data:
-        Content: 46
+        Content: 3.73
