@@ -12,15 +12,15 @@ using UnityEditor;
 namespace Mantega
 {
     /// <summary>
-    /// Defines a mechanism for creating a strongly-typed copy of an object
+    /// Defines a mechanism for creating a strongly-typed copy of an object.
     /// </summary>
-    /// <typeparam name="T">The type of the object to be cloned</typeparam>
+    /// <typeparam name="T">The type of the object to be cloned.</typeparam>
     public interface ITypedClonable<T>
     {
         /// <summary>
-        /// Creates a new instance of the current object with the same values as this instance
+        /// Creates a new instance of the current object with the same values as this instance.
         /// </summary>
-        /// <returns>A new instance of type <typeparamref name="T"/> that is a copy of the current instance</returns>
+        /// <returns>A new instance of type <typeparamref name="T"/> that is a copy of the current instance.</returns>
         public T Clone();
     }
 
@@ -28,26 +28,26 @@ namespace Mantega
     {
         /// <summary>
         /// Provides utility methods for working with reflection, such as discovering types that implement specific
-        /// interfaces
+        /// interfaces.
         /// </summary>
         /// <remarks>This class is designed to simplify common reflection tasks, such as finding types
         /// that implement a specific generic interface. It operates on the current application domain and handles
-        /// scenarios where some assemblies may not be fully loadable due to reflection issues</remarks>
+        /// scenarios where some assemblies may not be fully loadable due to reflection issues.</remarks>
         public static class ReflectionUtils
         {
             /// <summary>
             /// Finds all non-abstract classes in the current application domain that implement a specified generic
-            /// interface type
+            /// interface type.
             /// </summary>
             /// <remarks>This method scans all loaded assemblies in the current application domain to
             /// find classes that implement the specified generic interface. Assemblies that cannot be fully loaded due
-            /// to reflection issues are skipped</remarks>
+            /// to reflection issues are skipped.</remarks>
             /// <param name="genericInterfaceType">The generic interface type definition to search for. This must be an interface and a generic type
-            /// definition</param>
+            /// definition.</param>
             /// <returns>A list of <see cref="Type"/> objects representing the classes that implement the specified generic
-            /// interface type. The list will be empty if no matching classes are found</returns>
+            /// interface type. The list will be empty if no matching classes are found.</returns>
             /// <exception cref="ArgumentException">Thrown if <paramref name="genericInterfaceType"/> is not an interface or is not a generic type
-            /// definition</exception>
+            /// definition.</exception>
             public static List<Type> FindAllClassesOfInterface(Type genericInterfaceType)
             {
                 if (!genericInterfaceType.IsInterface || !genericInterfaceType.IsGenericTypeDefinition)
@@ -81,7 +81,7 @@ namespace Mantega
 
             /// <summary>
             /// Determines whether the specified <paramref name="sourceObject"/> can be converted to the type of 
-            /// <paramref name="targetObject"/> and, if possible, provides the converted value
+            /// <paramref name="targetObject"/> and, if possible, provides the converted value.
             /// </summary>
             /// <remarks>This method attempts to convert the <paramref name="sourceObject"/> to the
             /// type of  <paramref name="targetObject"/> using the following rules: <list type="bullet"> <item>If
@@ -91,14 +91,14 @@ namespace Mantega
             /// langword="true"/> and assigns <paramref name="sourceObject"/> to  <paramref name="converted"/>.</item>
             /// <item>If the conversion is possible using <see cref="Convert.ChangeType(object, Type)"/>, the method 
             /// returns <see langword="true"/> and assigns the converted value to <paramref name="converted"/>.</item>
-            /// <item>If none of the above conditions are met, the method returns <see langword="false"/></item>
+            /// <item>If none of the above conditions are met, the method returns <see langword="false"/>.</item>
             /// </list></remarks>
-            /// <param name="sourceObject">The object to be converted. Can be <see langword="null"/></param>
-            /// <param name="targetObject">An object whose type is used as the target type for the conversion.  Cannot be <see langword="null"/></param>
+            /// <param name="sourceObject">The object to be converted. Can be <see langword="null"/>.</param>
+            /// <param name="targetObject">An object whose type is used as the target type for the conversion.  Cannot be <see langword="null"/>.</param>
             /// <param name="converted">When this method returns, contains the converted value if the conversion  was successful; otherwise,
-            /// <see langword="null"/></param>
+            /// <see langword="null"/>.</param>
             /// <returns><see langword="true"/> if the <paramref name="sourceObject"/> can be converted to the type of  <paramref
-            /// name="targetObject"/>; otherwise, <see langword="false"/></returns>
+            /// name="targetObject"/>; otherwise, <see langword="false"/>.</returns>
             public static bool CanConvert([NotNull] object sourceObject, [NotNull] object targetObject, out object converted)
             {
                 converted = null;
@@ -155,51 +155,51 @@ namespace Mantega
         using Editor;
 
         /// <summary>
-        /// Represents a read-only synchronization interface for a value of type <typeparamref name="T"/>
+        /// Represents a read-only synchronization interface for a value of type <typeparamref name="T"/>.
         /// </summary>
         /// <remarks>This interface provides access to a value that can be observed for changes. Consumers can
-        /// subscribe to the <see cref="OnValueChanged"/> event to be notified when the value changes</remarks>
-        /// <typeparam name="T">The type of the value being synchronized</typeparam>
+        /// subscribe to the <see cref="OnValueChanged"/> event to be notified when the value changes.</remarks>
+        /// <typeparam name="T">The type of the value being synchronized.</typeparam>
         public interface IReadOnlySyncable<T>
         {
             /// <summary>
-            /// Gets the value stored in the current instance
+            /// Gets the value stored in the current instance.
             /// </summary>
             public T Value { get; }
 
             /// <summary>
-            /// Occurs when the value changes, providing the previous and current values
+            /// Occurs when the value changes, providing the previous and current values.
             /// </summary>
             /// <remarks>This event is triggered whenever the value is updated. The first parameter represents
             /// the previous value, and the second parameter represents the new value. Subscribers can use this event to
-            /// react to changes in the value</remarks>
+            /// react to changes in the value.</remarks>
             public event Action<T, T> OnValueChanged;
         }
 
         /// <summary>
-        /// Represents an interface for notifying subscribers about internal changes
+        /// Represents an interface for notifying subscribers about internal changes.
         /// </summary>
         /// <remarks>This interface defines an event that is triggered whenever an internal change occurs.
         /// Implementers of this interface can use the <see cref="OnInternalChange"/> event to notify subscribers about
-        /// state changes or other relevant updates</remarks>
+        /// state changes or other relevant updates.</remarks>
         public interface IInternalChange<T> : ITypedClonable<T>
         {
             /// <summary>
-            /// Occurs when a change is detected, providing the old and new values of the changed item
+            /// Occurs when a change is detected, providing the old and new values of the changed item.
             /// </summary>
             /// <remarks>This event is triggered whenever an internal change occurs. The first parameter represents
             /// the previous value, and the second parameter represents the new value. Subscribers can use this event to react to changes in
-            /// the state or data</remarks>
+            /// the state or data.</remarks>
             event Action<T, T> OnInternalChange;
         }
 
         /// <summary>
         /// Represents a synchronizable value of type <typeparamref name="T"/> that notifies subscribers when its value
-        /// changes
+        /// changes.
         /// </summary>
         /// <remarks>The <see cref="Syncable{T}"/> class provides a mechanism to track changes to a value and
-        /// notify listeners via the <see cref="OnValueChanged"/> event. If <typeparamref name="T"/> have internal changes it must implement <see cref="IInternalChange{T}"/></remarks>
-        /// <typeparam name="T">The type of the value being synchronized, if it has internal changes it must implement <see cref="IInternalChange{T}"/></typeparam>
+        /// notify listeners via the <see cref="OnValueChanged"/> event. If <typeparamref name="T"/> have internal changes it must implement <see cref="IInternalChange{T}"/>.</remarks>
+        /// <typeparam name="T">The type of the value being synchronized, if it has internal changes it must implement <see cref="IInternalChange{T}"/>.</typeparam>
         [Serializable]
         public class Syncable<T> : IReadOnlySyncable<T>
         {
@@ -235,11 +235,11 @@ namespace Mantega
             // [Header("Events")]
 
             /// <summary>
-            /// Occurs when the value changes, providing the previous and current <typeparamref name="T"/> values
+            /// Occurs when the value changes, providing the previous and current <typeparamref name="T"/> values.
             /// </summary>
             /// <remarks>This event is triggered whenever the value is updated or an internal change happen (in this case oldValue == newValue). The first parameter represents
             /// the previous value, and the second parameter represents the new value. Subscribers can use this event to
-            /// respond to changes in the value</remarks>
+            /// respond to changes in the value.</remarks>
             public event Action<T, T> OnValueChanged;
 
             /// <summary>

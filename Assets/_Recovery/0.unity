@@ -405,10 +405,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TextureDrawerExample
   meuImageUI: {fileID: 824616092}
-  drawer:
-    _texture: {fileID: 0}
-    _brushColor: {r: 0, g: 0, b: 0, a: 1}
-    _brushThickness: 1
 --- !u!4 &1552763071
 Transform:
   m_ObjectHideFlags: 0
