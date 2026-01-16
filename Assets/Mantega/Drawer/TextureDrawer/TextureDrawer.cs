@@ -3,7 +3,9 @@ using UnityEngine;
 
 namespace Mantega.Drawer.TextureDrawer
 {
+#if UNITY_EDITOR
     using Editor;
+#endif
 
     /// <summary>
     /// Provides utility methods for creating and manipulating textures.
