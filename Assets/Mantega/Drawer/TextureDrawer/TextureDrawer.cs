@@ -3,6 +3,8 @@ using UnityEngine;
 
 namespace Mantega.Drawer.TextureDrawer
 {
+    using Editor;
+
     /// <summary>
     /// Provides utility methods for creating and manipulating textures.
     /// </summary>
@@ -117,6 +119,9 @@ namespace Mantega.Drawer.TextureDrawer
         /// <summary>
         /// The texture being drawn on.
         /// </summary>
+#if UNITY_EDITOR
+        [CallOnChange(nameof(OnEditorChangeTexture))]
+#endif
         [SerializeField] private Texture2D _texture;
 
         /// <summary>
@@ -258,20 +263,20 @@ namespace Mantega.Drawer.TextureDrawer
         /// <summary>
         /// Validates the specified texture to ensure it meets the required conditions for processing.
         /// </summary>
-        /// <param name="tex">The <see cref="Texture2D"/> to validate.</param>
-        /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="tex"/> is <see langword="null"/>.</exception>
-        /// <exception cref="System.ArgumentException">Thrown if <paramref name="tex"/> is not readable. Ensure the texture is marked as readable in its import
+        /// <param name="texture">The <see cref="Texture2D"/> to validate.</param>
+        /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="texture"/> is <see langword="null"/>.</exception>
+        /// <exception cref="System.ArgumentException">Thrown if <paramref name="texture"/> is not readable. Ensure the texture is marked as readable in its import
         /// settings.</exception>
-        private static void ValidateTexture(Texture2D tex)
+        private static void ValidateTexture(Texture2D texture)
         {
-            if (tex == null)
+            if (texture == null)
             {
-                throw new System.ArgumentNullException(nameof(tex), $"{nameof(tex)} cannot be null.");
+                throw new System.ArgumentNullException(nameof(texture), $"{nameof(texture)} cannot be null.");
             }
 
-            if (!tex.isReadable)
+            if (!texture.isReadable)
             {
-                throw new System.ArgumentException($"{nameof(tex)} must be readable. Ensure the texture is marked as readable in its import settings.", nameof(tex));
+                throw new System.ArgumentException($"{nameof(texture)} must be readable. Ensure the texture is marked as readable in its import settings.", nameof(texture));
             }
         }
 
@@ -512,6 +517,14 @@ namespace Mantega.Drawer.TextureDrawer
         }
 
         #endregion
-    
+
+        #region Editor Methods
+#if UNITY_EDITOR
+        private void OnEditorChangeTexture(Texture2D _, Texture2D newTex)
+        {
+            ValidateTexture(newTex);
+        }
+#endif
+        #endregion
     }
 }
