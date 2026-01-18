@@ -266,6 +266,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1256638863}
   - component: {fileID: 1256638862}
+  - component: {fileID: 1256638864}
+  - component: {fileID: 1256638865}
   m_Layer: 0
   m_Name: DrawingController
   m_TagString: Untagged
@@ -285,12 +287,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8be0c898290de6d47af690b7ceba4fe6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DrawingController
-  drawingCamera: {fileID: 1204336010}
-  linePrefab: {fileID: 1846113919565815045, guid: 41f988d92894e654ba864c1a6ded5527, type: 3}
-  drawingParent: {fileID: 1904265400}
-  minDistance: 0.1
-  enableDrawing: 1
-  createdLines: []
+  DrawingCamera: {fileID: 1204336010}
+  LinePrefab: {fileID: 1846113919565815045, guid: 41f988d92894e654ba864c1a6ded5527, type: 3}
+  DrawingParent: {fileID: 1904265400}
+  MinDistance: 0.1
+  EnableDrawing: 1
+  CreatedLines: []
+  _isDrawing: 0
+  MousePosition: {x: 0, y: 0}
 --- !u!4 &1256638863
 Transform:
   m_ObjectHideFlags: 0
@@ -303,9 +307,133 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1904265400}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1256638864
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1256638861}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.PlayerInput
+  m_Actions: {fileID: -944628639613478452, guid: bcb196dc04dea5b42b02c155bfba806b, type: 3}
+  m_NotificationBehavior: 2
+  m_UIInputModule: {fileID: 0}
+  m_DeviceLostEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_DeviceRegainedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_ControlsChangedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_ActionEvents:
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1256638865}
+        m_TargetAssemblyTypeName: DrawingInputHandler, Assembly-CSharp
+        m_MethodName: HandleDrawInput
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 03ea3fe0-d779-4775-a860-d0148576d712
+    m_ActionName: 'Drawing/Draw[/Mouse/leftButton]'
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1256638865}
+        m_TargetAssemblyTypeName: DrawingInputHandler, Assembly-CSharp
+        m_MethodName: HandleMousePositionInput
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: b7875859-fa68-435a-9c21-f0107b85a6e7
+    m_ActionName: 'Drawing/MousePosition[/Mouse/position]'
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1256638865}
+        m_TargetAssemblyTypeName: DrawingInputHandler, Assembly-CSharp
+        m_MethodName: HandleChangeDrawStateInput
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 9a1271af-33a3-404f-b5d2-7590c50dbfb6
+    m_ActionName: Drawing/ActiveDraw
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1256638865}
+        m_TargetAssemblyTypeName: DrawingInputHandler, Assembly-CSharp
+        m_MethodName: HandleSaveDrawInput
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 36a5f382-69ee-448e-ae95-0ac5b6eacea6
+    m_ActionName: Drawing/SaveDraw
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1256638865}
+        m_TargetAssemblyTypeName: DrawingInputHandler, Assembly-CSharp
+        m_MethodName: HandleClearDrawInput
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: cfd67d05-e637-4d57-ad58-2c0cebd983cb
+    m_ActionName: Drawing/ClearCanvas
+  m_NeverAutoSwitchControlSchemes: 0
+  m_DefaultControlScheme: 
+  m_DefaultActionMap: Drawing
+  m_SplitScreenIndex: -1
+  m_Camera: {fileID: 1204336010}
+--- !u!114 &1256638865
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1256638861}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b7976e50e283c64a8e2db67cebe2e8c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DrawingInputHandler
+  _drawingController: {fileID: 1256638862}
 --- !u!1 &1904265399
 GameObject:
   m_ObjectHideFlags: 0
@@ -330,12 +458,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1904265399}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1256638863}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
@@ -343,4 +471,3 @@ SceneRoots:
   m_Roots:
   - {fileID: 1204336011}
   - {fileID: 1256638863}
-  - {fileID: 1904265400}

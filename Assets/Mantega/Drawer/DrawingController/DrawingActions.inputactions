@@ -1,0 +1,115 @@
+{
+    "version": 1,
+    "name": "DrawingActions",
+    "maps": [
+        {
+            "name": "Drawing",
+            "id": "638d66ba-e99e-4b62-b84d-ec6fbc2b46a4",
+            "actions": [
+                {
+                    "name": "Draw",
+                    "type": "Button",
+                    "id": "03ea3fe0-d779-4775-a860-d0148576d712",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "MousePosition",
+                    "type": "Value",
+                    "id": "b7875859-fa68-435a-9c21-f0107b85a6e7",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "ChangeDrawState",
+                    "type": "Button",
+                    "id": "9a1271af-33a3-404f-b5d2-7590c50dbfb6",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "SaveDraw",
+                    "type": "Button",
+                    "id": "36a5f382-69ee-448e-ae95-0ac5b6eacea6",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ClearCanvas",
+                    "type": "Button",
+                    "id": "cfd67d05-e637-4d57-ad58-2c0cebd983cb",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "812000fa-2130-4c1b-b6f5-1d19feaded84",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Draw",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b2434d2d-ce45-49b9-9b44-ffd0f5ce8781",
+                    "path": "<Mouse>/position",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "MousePosition",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "8463dde2-e708-4a23-a314-7859856e867e",
+                    "path": "<Keyboard>/d",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ChangeDrawState",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "31277c2d-c31c-497b-929f-77a19aa63836",
+                    "path": "<Keyboard>/s",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SaveDraw",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "29e36bed-b52e-4959-b09e-6580b89acc2a",
+                    "path": "<Keyboard>/c",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ClearCanvas",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

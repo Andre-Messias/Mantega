@@ -5,20 +5,35 @@ using System.IO;
 public class DrawingController : MonoBehaviour
 {
     [Header("Components")]
-    public Camera drawingCamera;
+    public Camera DrawingCamera;
 
     [Header("Draw config")]
-    public GameObject linePrefab;
-    public Transform drawingParent;
-    public float minDistance = 0.1f;
-    public bool enableDrawing = true;
+    public GameObject LinePrefab;
+    public Transform DrawingParent;
+    public float MinDistance = 0.1f;
+    public bool EnableDrawing = true;
 
     [Header("Draw")]
-    public List<LineRenderer> createdLines = new List<LineRenderer>();
+    public List<LineRenderer> CreatedLines = new();
+    [SerializeField] private bool _isDrawing = false;
+    public bool IsDrawing
+    {
+        get => _isDrawing;
+        set
+        {
+            if (value)
+                StartDrawing();
+            else
+                StopDrawing();
+        }
+    }
+
+    // Hidden in inspector
+    [HideInInspector] public Vector2 MousePosition;
 
     // Private variables
-    private LineRenderer currentLine;
-    private Vector2 lastPosition;
+    private LineRenderer _currentLine;
+    private Vector2 _lastPosition;
 
     void Update()
     {
@@ -33,46 +48,31 @@ public class DrawingController : MonoBehaviour
     /// the mouse has moved a minimum distance. - Releasing the left mouse button finalizes the current line.</remarks>
     void HandleDrawing()
     {
-        // Enable/disable drawing
-        if (Input.GetKeyDown(KeyCode.D))
-        {
-            enableDrawing = !enableDrawing;
-        }
-        if (!enableDrawing) return;
-
-        // Create line
-        if (Input.GetMouseButtonDown(0))
-        {
-            CreateNewLine();
-        }
+        if (!EnableDrawing) return;
 
         // Draw line
-        if (Input.GetMouseButton(0) && currentLine != null)
+        if (_isDrawing && _currentLine != null)
         {
             Vector2 mousePos = GetWorldPosition();
-            if (Vector2.Distance(mousePos, lastPosition) > minDistance)
+            if (Vector2.Distance(mousePos, _lastPosition) > MinDistance)
             {
                 UpdateLine(mousePos);
             }
-        }
+        }   
+    }
 
-        // End line
-        if (Input.GetMouseButtonUp(0))
-        {
-            currentLine = null;
-        }
+    private void StartDrawing()
+    {
+        _isDrawing = true;
+        if (!EnableDrawing) return;
+        CreateNewLine();
+    }
 
-        // Temporary: Save drawing on 'S' key press
-        if (Input.GetKeyDown(KeyCode.S))
-        {
-            SaveDrawingToFile();
-        }
-
-        // Temporary: Clear canvas on 'C' key press
-        if (Input.GetKeyDown(KeyCode.C))
-        {
-            ClearCanvas();
-        }
+    private void StopDrawing()
+    {
+        _isDrawing = false;
+        if (!EnableDrawing) return;
+        _currentLine = null;
     }
 
     /// <summary>
@@ -81,15 +81,15 @@ public class DrawingController : MonoBehaviour
     /// <remarks>This method instantiates a new line object using the specified prefab and sets it as a child
     /// of the drawing parent. The line is initialized with zero points, and the first point is added based on the
     /// current mouse position.</remarks>
-    void CreateNewLine()
+    private void CreateNewLine()
     {
         // Instantiate line object
-        GameObject newLine = Instantiate(linePrefab, Vector3.zero, Quaternion.identity, drawingParent);
-        currentLine = newLine.GetComponent<LineRenderer>();
-        createdLines.Add(currentLine);
+        GameObject newLine = Instantiate(LinePrefab, Vector3.zero, Quaternion.identity, DrawingParent);
+        _currentLine = newLine.GetComponent<LineRenderer>();
+        CreatedLines.Add(_currentLine);
 
         // Initialize line
-        currentLine.positionCount = 0;
+        _currentLine.positionCount = 0;
 
         // First point
         Vector2 mousePos = GetWorldPosition();
@@ -102,9 +102,9 @@ public class DrawingController : MonoBehaviour
     /// <param name="newPos">The position of the new point to add to the line.</param>
     void UpdateLine(Vector2 newPos)
     {
-        currentLine.positionCount++;
-        currentLine.SetPosition(currentLine.positionCount - 1, newPos);
-        lastPosition = newPos;
+        _currentLine.positionCount++;
+        _currentLine.SetPosition(_currentLine.positionCount - 1, newPos);
+        _lastPosition = newPos;
     }
 
     /// <summary>
@@ -114,11 +114,11 @@ public class DrawingController : MonoBehaviour
     /// objects. After calling this method, the collection of created lines will be empty.</remarks>
     public void ClearCanvas()
     {
-        foreach (var line in createdLines)
+        foreach (var line in CreatedLines)
         {
             Destroy(line.gameObject);
         }
-        createdLines.Clear();
+        CreatedLines.Clear();
     }
 
     /// <summary>
@@ -130,9 +130,7 @@ public class DrawingController : MonoBehaviour
     /// <returns>A <see cref="Vector2"/> representing the world position of the mouse cursor.</returns>
     Vector2 GetWorldPosition()
     {
-        Vector3 mousePos = Input.mousePosition;
-        mousePos.z = 10f;
-        return drawingCamera.ScreenToWorldPoint(mousePos);
+        return DrawingCamera.ScreenToWorldPoint(MousePosition);
     }
 
     // --- FUNÇÃO DE SALVAR IMAGEM ---
@@ -144,11 +142,11 @@ public class DrawingController : MonoBehaviour
 
         // 2. Cria uma textura temporária para renderizar a câmera
         RenderTexture rt = new RenderTexture(width, height, 24);
-        drawingCamera.targetTexture = rt;
+        DrawingCamera.targetTexture = rt;
 
         // 3. Renderiza manualmente a câmera
         RenderTexture.active = rt;
-        drawingCamera.Render();
+        DrawingCamera.Render();
 
         // 4. Lê os pixels para uma Texture2D
         Texture2D screenShot = new Texture2D(width, height, TextureFormat.RGB24, false);
@@ -156,7 +154,7 @@ public class DrawingController : MonoBehaviour
         screenShot.Apply();
 
         // 5. Limpa a sujeira
-        drawingCamera.targetTexture = null;
+        DrawingCamera.targetTexture = null;
         RenderTexture.active = null;
         Destroy(rt);
 
@@ -168,5 +166,10 @@ public class DrawingController : MonoBehaviour
         File.WriteAllBytes(filePath, bytes);
 
         Debug.Log("Imagem salva em: " + filePath);
+    }
+
+    public Texture2D GetDrawAsTexture()
+    {
+        return null;
     }
 }
