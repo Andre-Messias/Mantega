@@ -73,7 +73,7 @@ public class Stat : ScriptableObject
         }
         else
         {
-            throw new InvalidOperationException("Data does not implement IStatType<,> interface or the 'Value' property is missing.");
+            throw new InvalidOperationException($"Data does not implement {typeof(IStatType<,>)} or the 'Value' property is missing.");
         }
 
         return null;

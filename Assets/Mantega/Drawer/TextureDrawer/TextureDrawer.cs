@@ -116,11 +116,11 @@ namespace Mantega.Drawer.TextureDrawer
         }
         #endregion
 
-        [Header("Texture")]
         #region Texture
         /// <summary>
         /// The texture being drawn on.
         /// </summary>
+        [Header("Texture")]
 #if UNITY_EDITOR
         [CallOnChange(nameof(OnEditorChangeTexture))]
 #endif
@@ -140,11 +140,11 @@ namespace Mantega.Drawer.TextureDrawer
         }
         #endregion
 
-        [Header("Brush settings")]
-        #region Brush Color
+        #region Brush Settings
         /// <summary>
         /// The color of the brush used for drawing lines.
         /// </summary>
+        [Header("Brush settings")]
         [SerializeField] private Color _brushColor = Color.black;
 
         /// <summary>
@@ -166,9 +166,7 @@ namespace Mantega.Drawer.TextureDrawer
             _brushColor = color;
             return this;
         }
-        #endregion
 
-        #region Brush Thickness
         /// <summary>
         /// The thickness of the brush used for drawing lines, measured in pixels.
         /// </summary>
@@ -273,7 +271,7 @@ namespace Mantega.Drawer.TextureDrawer
         {
             if (texture == null)
             {
-                throw new System.ArgumentNullException(nameof(texture), $"{nameof(texture)} cannot be null.");
+                throw new System.ArgumentNullException(nameof(texture));
             }
 
             if (!texture.isReadable)

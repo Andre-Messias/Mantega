@@ -16,7 +16,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "MousePosition",
+                    "name": "PointerPosition",
                     "type": "Value",
                     "id": "b7875859-fa68-435a-9c21-f0107b85a6e7",
                     "expectedControlType": "Vector2",
@@ -25,7 +25,7 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "ChangeDrawState",
+                    "name": "ToggleDrawing",
                     "type": "Button",
                     "id": "9a1271af-33a3-404f-b5d2-7590c50dbfb6",
                     "expectedControlType": "",
@@ -43,7 +43,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "ClearCanvas",
+                    "name": "ClearDraw",
                     "type": "Button",
                     "id": "cfd67d05-e637-4d57-ad58-2c0cebd983cb",
                     "expectedControlType": "",
@@ -67,11 +67,11 @@
                 {
                     "name": "",
                     "id": "b2434d2d-ce45-49b9-9b44-ffd0f5ce8781",
-                    "path": "<Mouse>/position",
+                    "path": "<Pointer>/position",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "MousePosition",
+                    "action": "PointerPosition",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -82,7 +82,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "ChangeDrawState",
+                    "action": "ToggleDrawing",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -104,7 +104,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "ClearCanvas",
+                    "action": "ClearDraw",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

@@ -2,6 +2,9 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
 
+namespace Mantega.Drawer
+{
+
 public class DrawingController : MonoBehaviour
 {
     [Header("Components")]
@@ -172,4 +175,6 @@ public class DrawingController : MonoBehaviour
     {
         return null;
     }
+}
+
 }
