@@ -335,7 +335,7 @@ MonoBehaviour:
   _drawingCamera: {fileID: 1204336010}
   _linePrefab: {fileID: 1846113919565815045, guid: 41f988d92894e654ba864c1a6ded5527, type: 3}
   _drawingParent: {fileID: 1904265400}
-  MinDistance: 0.1
+  _minDrawingDistance: 0.1
   EnableDrawing: 1
   _lines: []
   _isDrawing: 0

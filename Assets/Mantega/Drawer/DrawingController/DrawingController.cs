@@ -1,18 +1,29 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
-using System.Diagnostics.CodeAnalysis;
 using Mantega.Diagnostics;
 
 namespace Mantega.Drawer
 {
+    /// <summary>
+    /// Provides functionality for drawings using line-based rendering.
+    /// </summary>
+    /// <remarks>The <see cref="DrawingController"/> class enables users to draw lines interactively, manage
+    /// drawing configurations, and export the resulting drawings as textures or files. It supports customizable
+    /// drawing parameters, such as the  minimum drawing distance and the prefab used for line rendering. The class also
+    /// provides methods for clearing the canvas, saving drawings, and handling user input for drawing operations. 
+    /// This class is designed to work with Unity's MonoBehaviour and requires a properly configured camera, line
+    /// prefab, and parent transform for drawing operations. Ensure that all required fields are set before using the
+    /// drawing functionality.</remarks>
     public class DrawingController : MonoBehaviour
     {
+        #region DrawingCamera
         /// <summary>
         /// The camera used for rendering drawing-related visuals.
         /// </summary>
-        [Header("Components")]
+        [Header("DrawingCamera")]
         [SerializeField] private Camera _drawingCamera;
+
         /// <summary>
         /// Gets or sets the camera used for rendering drawings.
         /// </summary>
@@ -25,20 +36,90 @@ namespace Mantega.Drawer
                 _drawingCamera = value;
             }
         }
+        #endregion
 
+        #region Draw Config
         /// <summary>
         /// The prefab used to create new line objects in the drawing.
         /// </summary>
         [Header("Draw config")]
         [SerializeField] private GameObject _linePrefab;
-        [SerializeField] private Transform _drawingParent;
-        [SerializeField, Min(0)] private float MinDistance = 0.1f;
-        public bool EnableDrawing = true;
 
+        /// <summary>
+        /// Gets or sets the prefab used to create new line objects.
+        /// </summary>
+        public GameObject LinePrefab
+        {
+            get => _linePrefab;
+            set
+            {
+                ValidateLinePrefab(value);
+                _linePrefab = value;
+            }
+        }
+
+        /// <summary>
+        /// The parent <see cref="Transform"/> under which drawing objects are instantiated.
+        /// </summary>
+        [SerializeField] private Transform _drawingParent;
+
+        /// <summary>
+        /// Gets or sets the parent <see cref="Transform"/> used for drawing operations.
+        /// </summary>
+        public Transform DrawingParent
+        {
+            get => _drawingParent;
+            set
+            {
+                Validations.ValidateNotNull(value, this);
+                _drawingParent = value;
+            }
+        }
+
+        /// <summary>
+        /// The minimum distance value used to determine proximity thresholds for the drawing functionality.
+        /// </summary>
+        [SerializeField, Min(0)] private float _minDrawingDistance = 0.1f;
+
+        /// <summary>
+        /// Gets or sets the minimum allowable drawing distance.
+        /// </summary>
+        public float MinDrawingDistance
+        {
+            get => _minDrawingDistance;
+            set
+            {
+                Validations.ValidateNotNegative(value, this);
+                _minDrawingDistance = value;
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether drawing functionality is enabled.
+        /// </summary>
+        public bool EnableDrawing = true;
+        #endregion
+
+        #region Draw
+        /// <summary>
+        /// The <see cref="LineRenderer"/> objects that represent the lines drawn on the canvas.
+        /// </summary>
         [Header("Draw")]
         [SerializeField] private List<LineRenderer> _lines = new();
+
+        /// <summary>
+        /// Gets the collection of <see cref="LineRenderer"/> objects that represent the drawn lines.
+        /// </summary>
         public List<LineRenderer> Lines => _lines;
+
+        /// <summary>
+        /// Indicates whether the object is currently in drawing mode.
+        /// </summary>
         [SerializeField] private bool _isDrawing = false;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the drawing operation is active.
+        /// </summary>
         public bool IsDrawing
         {
             get => _isDrawing;
@@ -50,18 +131,30 @@ namespace Mantega.Drawer
                     StopDrawing();
             }
         }
+        #endregion
 
         // Hidden in inspector
+        /// <summary>
+        /// Represents the current position of the mouse cursor in screen coordinates.
+        /// </summary>
         [HideInInspector] public Vector2 MousePosition;
 
         // Private variables
+        /// <summary>
+        /// Represents the current line being rendered by the <see cref="LineRenderer"/>.
+        /// </summary>
         private LineRenderer _currentLine;
+
+        /// <summary>
+        /// Stores the last recorded position.
+        /// </summary>
         private Vector2 _lastPosition;
 
         private void Awake()
         {
+            // Validations
             Validations.ValidateNotNull(_drawingCamera, this);
-            Validations.ValidateNotNull(_linePrefab, this);
+            ValidateLinePrefab(_linePrefab);
             Validations.ValidateNotNull(_drawingParent, this);
         }
 
@@ -85,9 +178,9 @@ namespace Mantega.Drawer
             if (_isDrawing && _currentLine != null)
             {
                 Vector2 mousePos = GetPointerWorldPosition();
-                if (Vector2.Distance(mousePos, _lastPosition) > MinDistance)
+                if (Vector2.Distance(mousePos, _lastPosition) > _minDrawingDistance)
                 {
-                    UpdateLine(mousePos);
+                    ExtendLine(mousePos);
                 }
             }   
         }
@@ -135,14 +228,14 @@ namespace Mantega.Drawer
 
             // First point
             Vector2 mousePos = GetPointerWorldPosition();
-            UpdateLine(mousePos);
+            ExtendLine(mousePos);
         }
 
         /// <summary>
         /// Updates the current line by adding a new point at the specified position.
         /// </summary>
         /// <param name="newPos">The position of the new point to add to the line.</param>
-        void UpdateLine(Vector2 newPos)
+        void ExtendLine(Vector2 newPos)
         {
             _currentLine.positionCount++;
             _currentLine.SetPosition(_currentLine.positionCount - 1, newPos);
@@ -285,6 +378,16 @@ namespace Mantega.Drawer
             }
         }
 
+        /// <summary>
+        /// Validates that the specified line prefab is not null and contains a <see cref="LineRenderer"/> component.
+        /// </summary>
+        /// <param name="linePrefab">The line prefab to validate. Must not be <see langword="null"/> and must contain a <see
+        /// cref="LineRenderer"/> component.</param>
+        private void ValidateLinePrefab(GameObject linePrefab)
+        {
+            Validations.ValidateNotNull(linePrefab, this);
+            Validations.ValidateComponentExists<LineRenderer>(linePrefab, this);
+        }
         #endregion
     }
 }
