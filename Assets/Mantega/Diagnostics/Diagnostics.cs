@@ -57,19 +57,19 @@ namespace Mantega.Diagnostics
         }
         #endregion
 
-        public static void ValidateNotNegative(int value, UnityEngine.Object context = null, [CallerArgumentExpression("value")] string paramName = "")
+        public static void ValidateNotNegative(int value, Object context = null, [CallerArgumentExpression("value")] string paramName = "")
         {
             if (value < 0)
                 ThrowOutOfRange(paramName, value, "int", context);
         }
 
-        public static void ValidateNotNegative(float value, UnityEngine.Object context = null, [CallerArgumentExpression("value")] string paramName = "")
+        public static void ValidateNotNegative(float value, Object context = null, [CallerArgumentExpression("value")] string paramName = "")
         {
             if (value < 0)
                 ThrowOutOfRange(paramName, value, "float", context);
         }
 
-        private static void ThrowOutOfRange(string paramName, object actualValue, string typeName, UnityEngine.Object context)
+        private static void ThrowOutOfRange(string paramName, object actualValue, string typeName, Object context)
         {
             string reason = $"The value is negative (Current value: {actualValue})";
             string message = BuildErrorMessage(reason, paramName, typeName, context);

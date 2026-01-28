@@ -4,9 +4,7 @@
 
 using UnityEngine;
 using UnityEngine.UI;
-using Mantega.Drawer.TextureDrawer;
-
-using Line = Mantega.Drawer.TextureDrawer.TextureDrawer.Line;
+using Mantega.Drawer;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -40,7 +38,7 @@ public class TextureDrawerExample : MonoBehaviour
 
     public void PaintLine(Vector2 start, Vector2 end, int thickness, Color color)
     {
-        Line newLine = new(
+        StyledLine newLine = new(
             start,
             end,
             thickness,

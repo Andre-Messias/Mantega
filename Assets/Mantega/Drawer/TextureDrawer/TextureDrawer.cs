@@ -1,12 +1,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Mantega.Drawer.TextureDrawer
-{
+using Mantega.Geometry;
+
 #if UNITY_EDITOR
-    using Editor;
+using Mantega.Editor;
 #endif
 
+namespace Mantega.Drawer
+{
     /// <summary>
     /// Provides utility methods for creating and manipulating textures.
     /// </summary>
@@ -16,106 +18,6 @@ namespace Mantega.Drawer.TextureDrawer
     [System.Serializable]
     public class TextureDrawer
     {
-        #region Line Structs
-        /// <summary>
-        /// Represents a line segment defined by two points in 2D space.
-        /// </summary>
-        /// <remarks>The <see cref="LinePoints"/> struct is immutable and provides a way to define a line
-        /// segment using its start and end points. Both points are represented as <see cref="Vector2"/>
-        /// instances.</remarks>
-        [System.Serializable]
-        public readonly struct LinePoints
-        {
-            /// <summary>
-            /// The starting point of the line.
-            /// </summary>
-            public readonly Vector2 Start;
-
-            /// <summary>
-            /// The ending point of the line.
-            /// </summary>
-            public readonly Vector2 End;
-
-            /// <summary>
-            /// Initializes a new instance of the <see cref="LinePoints"/> class with the specified start and end
-            /// points.
-            /// </summary>
-            /// <param name="start">The starting point of the line.</param>
-            /// <param name="end">The ending point of the line.</param>
-            public LinePoints(Vector2 start, Vector2 end)
-            {
-                Start = start;
-                End = end;
-            }
-
-            /// <summary>
-            /// Defines an implicit conversion from a tuple of two <see cref="Vector2"/> points to a <see
-            /// cref="LinePoints"/> instance.
-            /// </summary>
-            /// <param name="points">A tuple containing the start and end points of the line, represented as <see cref="Vector2"/> values.</param>
-            public static implicit operator LinePoints((Vector2 start, Vector2 end) points)
-            {
-                return new LinePoints(points.start, points.end);
-            }
-        }
-
-        /// <summary>
-        /// Represents a straight line defined by its endpoints, thickness, and color.
-        /// </summary>
-        /// <remarks>The <see cref="Line"/> structure is immutable and provides a way to define a line
-        /// segment in 2D space. It includes the start and end points of the line, the line's thickness, and its
-        /// color.</remarks>
-        [System.Serializable]
-        public readonly struct Line
-        {
-            /// <summary>
-            /// The points that define the line.
-            /// </summary>
-            /// <remarks>This field is read-only and provides the coordinates or data points that
-            /// describe the line. It can be used to access the line's geometry or for calculations involving the
-            /// line.</remarks>
-            public readonly LinePoints LinePoints;
-
-            /// <summary>
-            /// The thickness of the line, measured as an integer value.
-            /// </summary>
-            /// <remarks>This field must be positive</remarks>
-            public readonly int Thickness;
-
-            /// <summary>
-            /// The color of the line.
-            /// </summary>
-            public readonly Color Color;
-
-            /// <summary>
-            /// Initializes a new instance of <see cref="Line"/>.
-            /// </summary>
-            /// <param name="linePoints">The points that define the start and end of the line.</param>
-            /// <param name="thickness">The thickness of the line. Must be greater than zero.</param>
-            /// <param name="color">The color of the line.</param>
-            /// <exception cref="System.ArgumentOutOfRangeException">Thrown if <paramref name="thickness"/> is less than or equal to zero.</exception>
-            public Line(LinePoints linePoints, int thickness, Color color)
-            {
-                if (thickness <= 0)
-                {
-                    throw new System.ArgumentOutOfRangeException(nameof(thickness), thickness, $"{nameof(thickness)} must be greater than zero.");
-                }
-
-                this.LinePoints = linePoints;
-                Thickness = thickness;
-                Color = color;
-            }
-
-            /// <inheritdoc cref="Line(LinePoints, int, Color)"/>
-            /// <param name="start">The starting point of the line.</param>
-            /// <param name="end">The ending point of the line.</param>
-            public Line(Vector2 start, Vector2 end, int thickness, Color color) : this(new LinePoints(start, end), thickness, color)
-            {
-
-            }
-        }
-        #endregion
-
         #region Texture
         /// <summary>
         /// The texture being drawn on.
@@ -232,7 +134,7 @@ namespace Mantega.Drawer.TextureDrawer
 
         /// <inheritdoc cref="DrawLine(Vector2, Vector2)"/>
         /// <param name="line">The line to be drawn, defined by its start and end points.</param>
-        public TextureDrawer DrawLine(Line line)
+        public TextureDrawer DrawLine(StyledLine line)
         {
             DrawLine(_texture, line);
             return this;
@@ -241,17 +143,17 @@ namespace Mantega.Drawer.TextureDrawer
         /// <summary>
         /// Draws the specified lines onto the texture.
         /// </summary>
-        /// <param name="lines">A list of <see cref="Line"/> objects representing the lines to be drawn. Cannot be null.</param>
+        /// <param name="lines">A list of <see cref="StyledLine"/> objects representing the lines to be drawn. Cannot be null.</param>
         /// <returns>The current <see cref="TextureDrawer"/> instance, allowing for method chaining.</returns>
-        public TextureDrawer DrawLines(List<Line> lines)
+        public TextureDrawer DrawLines(List<StyledLine> lines)
         {
             DrawLines(_texture, lines);
             return this;
         }
 
-        /// <inheritdoc cref="DrawLines(List{Line})"/>
-        /// <param name="linePoints">A list of <see cref="LinePoints"/> objects representing the start and end points of each line to be drawn.</param>
-        public TextureDrawer DrawLines(List<LinePoints> linePoints)
+        /// <inheritdoc cref="DrawLines(List{StyledLine})"/>
+        /// <param name="linePoints">A list of <see cref="LineSegment"/> objects representing the start and end points of each line to be drawn.</param>
+        public TextureDrawer DrawLines(List<LineSegment> linePoints)
         {
             DrawLines(_texture, linePoints, _brushThickness, _brushColor);
             return this;
@@ -346,12 +248,12 @@ namespace Mantega.Drawer.TextureDrawer
 
         #region Draw Lines Static Methods
 
-        /// <inheritdoc cref="DrawLines(Texture2D, List{Line})"/>
+        /// <inheritdoc cref="DrawLines(Texture2D, List{StyledLine})"/>
         /// <param name="tex">The <see cref="Texture2D"/> on which the lines will be drawn. This texture will be modified directly.</param>
-        /// <param name="linePoints">A list of <see cref="LinePoints"/> objects, each defining the start and end points of a line to be drawn.</param>
+        /// <param name="linePoints">A list of <see cref="LineSegment"/> objects, each defining the start and end points of a line to be drawn.</param>
         /// <param name="thickness">The thickness of the lines to be drawn, in pixels. Must be a positive integer.</param>
         /// <param name="color">The color of the lines to be drawn.</param>
-        public static void DrawLines(Texture2D tex, List<LinePoints> linePoints, int thickness, Color color)
+        public static void DrawLines(Texture2D tex, List<LineSegment> linePoints, int thickness, Color color)
         {
             // Validation
             ValidateTexture(tex);
@@ -373,8 +275,8 @@ namespace Mantega.Drawer.TextureDrawer
         /// <remarks>This method modifies the provided texture directly by drawing the specified lines
         /// onto it. After drawing, the texture is updated to reflect the changes.</remarks>
         /// <param name="tex">The <see cref="Texture2D"/> on which the lines will be drawn. The texture must be writable.</param>
-        /// <param name="lines">A list of <see cref="Line"/> objects representing the lines to be drawn.</param>
-        public static void DrawLines(Texture2D tex, List<Line> lines)
+        /// <param name="lines">A list of <see cref="StyledLine"/> objects representing the lines to be drawn.</param>
+        public static void DrawLines(Texture2D tex, List<StyledLine> lines)
         {
             // Validation
             ValidateTexture(tex);
@@ -385,7 +287,7 @@ namespace Mantega.Drawer.TextureDrawer
 
             foreach (var line in lines)
             {
-                DrawLineInMemory(pixels, width, height, line.LinePoints.Start, line.LinePoints.End, line.Thickness, line.Color);
+                DrawLineInMemory(pixels, width, height, line.Segment.Start, line.Segment.End, line.Thickness, line.Color);
             }
 
             tex.SetPixels32(pixels);
@@ -416,9 +318,9 @@ namespace Mantega.Drawer.TextureDrawer
         /// <inheritdoc cref="DrawLine(Texture2D, Vector2, Vector2, int, Color)"/>
         /// <param name="tex">The texture on which the line will be drawn. Cannot be null.</param>
         /// <param name="line">The line to draw, defined by its start and end points. Cannot be null.</param>
-        public static void DrawLine(Texture2D tex, Line line)
+        public static void DrawLine(Texture2D tex, StyledLine line)
         {
-            DrawLine(tex, line.LinePoints.Start, line.LinePoints.End, line.Thickness, line.Color);
+            DrawLine(tex, line.Segment.Start, line.Segment.End, line.Thickness, line.Color);
         }
 
         /// <summary>
