@@ -1,77 +1,96 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-using Mantega.Drawer;   
+using Mantega.Geometry; 
+using Mantega.Drawer;
+using Mantega.Diagnostics;
 
 namespace Mantega.Runes
 {
     public static class RuneProcessor
     {
-        public static List<StyledLine> NormalizeAndCenter(List<StyledLine> originalLines, int targetResolution, float padding)
+        public static List<LineSegment> ProcessDraw(List<LineRenderer> draw, Vector2 targetResolution, float padding, Camera camera = null)
         {
-            if (originalLines == null || originalLines.Count == 0) return new List<StyledLine>();
+            var extractedLines = ExtractLines(draw, camera);
+            var normalizedLines = Normalize(extractedLines, targetResolution, padding);
+            return normalizedLines;
+        }
 
-            // 1. Encontrar o Bounding Box (Limites do desenho atual)
-            float minX = float.MaxValue, minY = float.MaxValue;
-            float maxX = float.MinValue, maxY = float.MinValue;
+        public static List<LineSegment> ExtractLines(List<LineRenderer> renderers, Camera camera = null)
+        {
+            Validations.ValidateNotNull(renderers);
 
-            foreach (var line in originalLines)
+            var extractedLines = new List<LineSegment>();
+
+            foreach (var lr in renderers)
             {
-                UpdateBounds(line.Segment.Start, ref minX, ref minY, ref maxX, ref maxY);
-                UpdateBounds(line.Segment.End, ref minX, ref minY, ref maxX, ref maxY);
+                extractedLines.AddRange(lr.ToLineSegments(camera));
             }
 
-            float currentWidth = maxX - minX;
-            float currentHeight = maxY - minY;
+            return extractedLines;
+        }
+        
+        public static List<LineSegment> Normalize(List<LineSegment> originalLines, Vector2 targetResolution, float padding)
+        {
+            Validations.ValidateNotNegative(targetResolution);
 
-            // Evita divisão por zero se for um ponto único
-            if (currentWidth == 0) currentWidth = 1;
-            if (currentHeight == 0) currentHeight = 1;
+            if (originalLines == null || originalLines.Count == 0)
+                return new List<LineSegment>();
 
-            // 2. Calcular o Fator de Escala (Fit to Frame)
-            // Queremos que o maior lado do desenho caiba na (resolução - padding)
-            float drawableSize = targetResolution - (padding * 2);
-            float scaleX = drawableSize / currentWidth;
-            float scaleY = drawableSize / currentHeight;
-            float finalScale = Mathf.Min(scaleX, scaleY); // Mantém a proporção (aspect ratio)
+            // Draw bounding box of the original content
+            Bounds bounds = CreateLinesBounds(originalLines);
 
-            // 3. Calcular o Offset para Centralizar
-            Vector2 currentCenter = new(minX + currentWidth / 2f, minY + currentHeight / 2f);
-            Vector2 targetCenter = new(targetResolution / 2f, targetResolution / 2f);
+            // Avoid division by zero
+            if (bounds.size.x == 0 || bounds.size.y == 0)
+                return new List<LineSegment>(originalLines);
 
-            // O movimento é: Levar o centro atual para (0,0), escalar, depois levar para o centro alvo
-            List<StyledLine> processedLines = new();
+            // Scale
+            float drawableWidth = targetResolution.x - (padding * 2);
+            float drawableHeight = targetResolution.y - (padding * 2);
+
+            float scaleX = drawableWidth / bounds.size.x;
+            float scaleY = drawableHeight / bounds.size.y;
+
+            // Avoid distortion: use the smaller scale factor
+            float finalScale = Mathf.Min(scaleX, scaleY);
+
+            // Centering
+            Vector2 currentCenter = bounds.center;
+            Vector2 targetCenter = targetResolution / 2f;
+
+            // Construct new lines
+            var processedLines = new List<LineSegment>(originalLines.Count);
 
             foreach (var line in originalLines)
             {
-                Vector2 newStart = TransformPoint(line.Segment.Start, currentCenter, targetCenter, finalScale);
-                Vector2 newEnd = TransformPoint(line.Segment.End, currentCenter, targetCenter, finalScale);
+                Vector2 newStart = TransformPoint(line.Start, currentCenter, targetCenter, finalScale);
+                Vector2 newEnd = TransformPoint(line.End, currentCenter, targetCenter, finalScale);
 
-                // Recriar a linha com os novos pontos e espessura ajustada (opcional escalar espessura também)
-                int newThickness = Mathf.Max(1, Mathf.RoundToInt(line.Thickness)); // Pode multiplicar pelo scale se quiser traço proporcional
-
-                processedLines.Add(new StyledLine(newStart, newEnd, newThickness, line.Color));
+                processedLines.Add(new LineSegment(newStart, newEnd));
             }
 
             return processedLines;
         }
-
-        private static void UpdateBounds(Vector2 point, ref float minX, ref float minY, ref float maxX, ref float maxY)
+        
+        private static Bounds CreateLinesBounds(List<LineSegment> lines)
         {
-            if (point.x < minX) minX = point.x;
-            if (point.y < minY) minY = point.y;
-            if (point.x > maxX) maxX = point.x;
-            if (point.y > maxY) maxY = point.y;
+            if (lines.Count == 0) return new Bounds(Vector2.zero, Vector2.zero);
+
+            Vector2 firstPoint = lines[0].Start;
+            Bounds bounds = new (firstPoint, Vector3.zero);
+
+            foreach (var line in lines)
+            {
+                bounds.Encapsulate(line.Start);
+                bounds.Encapsulate(line.End);
+            }
+
+            return bounds;
         }
 
         private static Vector2 TransformPoint(Vector2 point, Vector2 oldCenter, Vector2 newCenter, float scale)
         {
-            // 1. Centraliza na origem (0,0) relativa ao desenho original
-            Vector2 centered = point - oldCenter;
-            // 2. Escala
-            Vector2 scaled = centered * scale;
-            // 3. Move para o centro da textura alvo
-            return scaled + newCenter;
+            return ((point - oldCenter) * scale) + newCenter;
         }
     }
 }

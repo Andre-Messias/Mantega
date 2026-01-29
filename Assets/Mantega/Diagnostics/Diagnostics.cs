@@ -1,6 +1,7 @@
 namespace Mantega.Diagnostics
 {
     using System.Runtime.CompilerServices;
+    using System.Xml.Serialization;
     using UnityEngine;
 
     public static class Validations 
@@ -57,16 +58,29 @@ namespace Mantega.Diagnostics
         }
         #endregion
 
+        #region Validate Not Negative
         public static void ValidateNotNegative(int value, Object context = null, [CallerArgumentExpression("value")] string paramName = "")
         {
             if (value < 0)
-                ThrowOutOfRange(paramName, value, "int", context);
+                ThrowOutOfRange(paramName, value, nameof(System.Int32), context);
         }
 
         public static void ValidateNotNegative(float value, Object context = null, [CallerArgumentExpression("value")] string paramName = "")
         {
             if (value < 0)
-                ThrowOutOfRange(paramName, value, "float", context);
+                ThrowOutOfRange(paramName, value, nameof(System.Single), context);
+        }
+
+        public static void ValidateNotNegative(double value, Object context = null, [CallerArgumentExpression("value")] string paramName = "")
+        {
+            if (value < 0)
+                ThrowOutOfRange(paramName, value, nameof(System.Double), context);
+        }
+
+        public static void ValidateNotNegative(Vector2 value, Object context = null, [CallerArgumentExpression("value")] string paramName = "")
+        {
+            if (value.x < 0 || value.y < 0)
+                ThrowOutOfRange(paramName, value, nameof(UnityEngine.Vector2), context);
         }
 
         private static void ThrowOutOfRange(string paramName, object actualValue, string typeName, Object context)
@@ -76,5 +90,6 @@ namespace Mantega.Diagnostics
 
             throw new System.ArgumentOutOfRangeException(paramName, actualValue, message);
         }
+        #endregion
     }
 }
