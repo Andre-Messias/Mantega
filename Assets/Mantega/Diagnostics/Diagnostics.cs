@@ -1,7 +1,6 @@
 namespace Mantega.Diagnostics
 {
     using System.Runtime.CompilerServices;
-    using System.Xml.Serialization;
     using UnityEngine;
 
     public static class Validations 

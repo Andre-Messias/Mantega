@@ -1,9 +1,9 @@
-using Mantega.Diagnostics;
-using UnityEngine;
-using UnityEngine.InputSystem;
-
 namespace Mantega.Drawer
 {
+    using Mantega.Diagnostics;
+    using UnityEngine;
+    using UnityEngine.InputSystem;
+
     /// <summary>
     /// Handles user input for drawing operations.
     /// </summary>

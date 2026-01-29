@@ -1,11 +1,10 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI; // Opcional, para preview
-using Mantega.Drawer; // Onde mora o TextureDrawer e DrawingController
-using Mantega.Geometry; // Onde mora o LineSegment
-using static UnityEngine.GraphicsBuffer;
+using UnityEngine.UI;
 
-
+using Mantega.Diagnostics;
+using Mantega.Drawer; 
+using Mantega.Geometry;
 
 namespace Mantega.Runes
 {
@@ -19,10 +18,7 @@ namespace Mantega.Runes
         [SerializeField] private DrawingController _drawingController;
 
         [Header("Output Settings")]
-        [Tooltip("Resolução final da textura da runa (ex: 512x512 ou 256x512)")]
         [SerializeField] private Vector2Int _resolution = new(512, 512);
-
-        [Tooltip("Espaço vazio nas bordas para a runa não encostar no limite")]
         [SerializeField] private Vector2 _padding = new(20f, 20f);
 
         [Header("Style")]
@@ -31,53 +27,42 @@ namespace Mantega.Runes
         [Header("Preview (Optional)")]
         [SerializeField] private RawImage _previewImage;
 
-        /// <summary>
-        /// Captura o desenho atual, normaliza e gera uma textura pronta para uso.
-        /// </summary>
-        /// <returns>A Texture2D gerada.</returns>
-        public Texture2D BakeRune()
+        private void Awake()
         {
-            if (_drawingController == null)
-            {
-                Debug.LogError("DrawingController não atribuído no RuneGenerator!");
-                return null;
-            }
+            Validations.ValidateNotNull(_drawingController);
+        }
 
-            // 1. PROCESSAMENTO (Geometry Phase)
-            // Extrai as linhas do mundo 3D, limpa, centraliza e escala para caber na resolução alvo.
-            // O RuneProcessor retorna apenas dados matemáticos (LineSegment), sem cor ou pixels.
+        public (Texture2D, List<LineSegment>) BakeRune()
+        {
+            // Processing
             List<LineSegment> segments = RuneProcessor.ProcessDraw(
-                _drawingController.Lines,           // As linhas cruas do LineRenderer
-                _resolution,                        // O tamanho do alvo (Vector2Int converte implícito para Vector2)
-                _padding,                           // Margem de segurança
-                _drawingController.DrawingCamera    // Necessário para converter World -> Screen
+                _drawingController.Lines,     
+                _resolution,         
+                _padding,                       
+                _drawingController.DrawingCamera 
             );
 
             if (segments.Count == 0)
             {
-                Debug.LogWarning("Nenhuma linha para gerar a runa.");
-                return null;
+                Debug.LogWarning("No lines to draw the rune.");
+                return (null, segments);
             }
 
-            // 2. PINTURA (Texture Phase)
+            // Drawing
             _drawer.Texture = TextureDrawer.CreateSolidTexture(_resolution.x, _resolution.y, Color.white);
             _drawer.DrawLines(segments);
 
-            // 3. FINALIZAÇÃO
+            // Finalizing
             Texture2D finalTexture = _drawer.Texture;
 
-            // Se tivermos uma imagem de UI para preview, atualizamos ela agora
             if (_previewImage != null)
             {
                 UpdatePreview(finalTexture);
             }
 
-            return finalTexture;
+            return (finalTexture, segments);
         }
 
-        /// <summary>
-        /// Atualiza o componente de Image da UI com a nova textura.
-        /// </summary>
         private void UpdatePreview(Texture2D texture)
         {
             _previewImage.texture = texture;

@@ -255,7 +255,7 @@ GameObject:
   - component: {fileID: 715469820}
   - component: {fileID: 715469821}
   m_Layer: 0
-  m_Name: RuneGeneratorManager
+  m_Name: RuneDrawer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

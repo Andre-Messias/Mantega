@@ -1,14 +1,14 @@
-using System.Collections.Generic;
-using UnityEngine;
-
-using Mantega.Geometry;
-
-#if UNITY_EDITOR
-using Mantega.Editor;
-#endif
-
 namespace Mantega.Drawer
 {
+    using System.Collections.Generic;
+    using UnityEngine;
+
+    using Mantega.Geometry;
+
+#if UNITY_EDITOR
+    using Mantega.Editor;
+#endif
+
     /// <summary>
     /// Provides utility methods for creating and manipulating textures.
     /// </summary>
