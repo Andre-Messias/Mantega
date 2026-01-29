@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using Mantega.Geometry; 
-using Mantega.Drawer;
 using Mantega.Diagnostics;
 
 namespace Mantega.Runes

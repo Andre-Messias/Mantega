@@ -63,7 +63,7 @@ namespace Mantega.Drawer
         /// </summary>
         /// <param name="color">The <see cref="Color"/> to set as the brush color.</param>
         /// <returns>The current <see cref="TextureDrawer"/> instance, allowing for method chaining.</returns>
-        public TextureDrawer SetLineBrushColor(Color color)
+        private TextureDrawer SetLineBrushColor(Color color)
         {
             _brushColor = color;
             return this;
@@ -72,7 +72,7 @@ namespace Mantega.Drawer
         /// <summary>
         /// The thickness of the brush used for drawing lines, measured in pixels.
         /// </summary>
-        [SerializeField][Min(1)] private int _brushThickness = 1;
+        [SerializeField, Min(1), Tooltip("The brush thickness in pixels")] private int _brushThickness = 1;
 
         /// <summary>
         /// Gets or sets the thickness of the line used for drawing.
@@ -88,7 +88,7 @@ namespace Mantega.Drawer
         /// </summary>
         /// <param name="thickness">The desired brush thickness. Must be a positive integer. Values less than 1 will be clamped to 1.</param>
         /// <returns>The current <see cref="TextureDrawer"/> instance, allowing for method chaining.</returns>
-        public TextureDrawer SetBrushThickness(int thickness)
+        private TextureDrawer SetBrushThickness(int thickness)
         {
             _brushThickness = Mathf.Max(1, thickness);
             return this;

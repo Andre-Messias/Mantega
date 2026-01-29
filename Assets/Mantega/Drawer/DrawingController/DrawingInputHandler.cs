@@ -1,3 +1,4 @@
+using Mantega.Diagnostics;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -75,11 +76,11 @@ namespace Mantega.Drawer
         private void OnEnable()
         {
             // Bind actions
-            BindAction(_drawAction, OnDrawPerformed, OnDrawCanceled);
-            BindAction(_toggleDrawingAction, OnToggleDrawPerformed);
-            BindAction(_saveDrawAction, OnSavePerformed);
-            BindAction(_clearDrawAction, OnClearPerformed);
-            BindAction(_pointerPositionAction, OnPointerPositionPerformed);
+            if(_drawAction != null) BindAction(_drawAction, OnDrawPerformed, OnDrawCanceled);
+            if(_toggleDrawingAction != null) BindAction(_toggleDrawingAction, OnToggleDrawPerformed);
+            if(_saveDrawAction != null) BindAction(_saveDrawAction, OnSavePerformed);
+            if(_clearDrawAction != null) BindAction(_clearDrawAction, OnClearPerformed);
+            if(_pointerPositionAction != null) BindAction(_pointerPositionAction, OnPointerPositionPerformed);
         }
 
         /// <summary>
@@ -91,11 +92,11 @@ namespace Mantega.Drawer
         private void OnDisable()
         {
             // Unbind actions
-            UnbindAction(_drawAction, OnDrawPerformed, OnDrawCanceled);
-            UnbindAction(_toggleDrawingAction, OnToggleDrawPerformed);
-            UnbindAction(_saveDrawAction, OnSavePerformed);
-            UnbindAction(_clearDrawAction, OnClearPerformed);
-            UnbindAction(_pointerPositionAction, OnPointerPositionPerformed);
+            if (_drawAction != null) UnbindAction(_drawAction, OnDrawPerformed, OnDrawCanceled);
+            if (_toggleDrawingAction != null) UnbindAction(_toggleDrawingAction, OnToggleDrawPerformed);
+            if (_saveDrawAction != null) UnbindAction(_saveDrawAction, OnSavePerformed);
+            if (_clearDrawAction != null) UnbindAction(_clearDrawAction, OnClearPerformed);
+            if (_pointerPositionAction != null) UnbindAction(_pointerPositionAction, OnPointerPositionPerformed);
         }
 
         #region Bind/Unbind Input Actions
@@ -143,14 +144,8 @@ namespace Mantega.Drawer
         /// is null.</exception>
         private void ValidateActionReference(InputActionReference actionRef)
         {
-            if (actionRef == null)
-            {
-                throw new System.ArgumentNullException(nameof(actionRef));
-            }
-            if (actionRef.action == null)
-            {
-                throw new System.ArgumentNullException(nameof(actionRef));
-            }
+            Validations.ValidateNotNull(actionRef, this);
+            Validations.ValidateNotNull(actionRef.action, this);
         }
 
         #endregion
