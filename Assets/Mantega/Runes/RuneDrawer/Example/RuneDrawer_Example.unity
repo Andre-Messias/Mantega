@@ -291,7 +291,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Mantega.Runes.RuneGenerator
   _drawingController: {fileID: 1256638862}
   _resolution: {x: 105, y: 105}
-  _padding: 20
+  _padding: {x: 20, y: 15}
   _drawer:
     _texture: {fileID: 0}
     _brushColor: {r: 0, g: 0, b: 0, a: 1}

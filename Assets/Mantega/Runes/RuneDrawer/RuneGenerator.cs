@@ -20,10 +20,10 @@ namespace Mantega.Runes
 
         [Header("Output Settings")]
         [Tooltip("Resolução final da textura da runa (ex: 512x512 ou 256x512)")]
-        [SerializeField] private Vector2Int _resolution = new Vector2Int(512, 512);
+        [SerializeField] private Vector2Int _resolution = new(512, 512);
 
         [Tooltip("Espaço vazio nas bordas para a runa não encostar no limite")]
-        [SerializeField] private float _padding = 20f;
+        [SerializeField] private Vector2 _padding = new(20f, 20f);
 
         [Header("Style")]
         [SerializeField] private TextureDrawer _drawer = new();
