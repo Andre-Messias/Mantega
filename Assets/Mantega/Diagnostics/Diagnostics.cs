@@ -30,6 +30,50 @@ namespace Mantega.Diagnostics
 
         #endregion
 
+        #region Validate Not Null or Empty
+        public static void ValidateNotNullOrEmpty(string str, Object context = null, [CallerArgumentExpression("str")] string paramName = "")
+        {
+            ValidateNotNull(str, context, paramName);
+            if (str.Length == 0)
+            {
+                ThrowEmpty(paramName, nameof(System.String), context);
+            }
+        }
+
+        public static void ValidateNotNullOrEmpty<T>(T[] array, Object context = null, [CallerArgumentExpression("array")] string paramName = "")
+        {
+            ValidateNotNull(array, context, paramName);
+            if (array.Length == 0)
+            {
+                ThrowEmpty(paramName, $"Array of {typeof(T).Name}", context);
+            }
+        }
+
+        public static void ValidateNotNullOrEmpty<T>(System.Collections.Generic.List<T> list, Object context = null, [CallerArgumentExpression("list")] string paramName = "")
+        {
+            ValidateNotNull(list, context, paramName);
+            if (list.Count == 0)
+            {
+                ThrowEmpty(paramName, $"List of {typeof(T).Name}", context);
+            }
+        }
+
+        public static void ValidateNotNullOrEmpty(LineRenderer lineRenderer, Object context = null, [CallerArgumentExpression("lineRenderer")] string paramName = "")
+        {
+            ValidateNotNull(lineRenderer, context, paramName);
+            if (lineRenderer.positionCount == 0)
+            {
+                ThrowEmpty(paramName, nameof(LineRenderer), context);
+            }
+        }
+
+        private static void ThrowEmpty(string paramName, string typeName, Object context)
+        {
+            string message = BuildErrorMessage("The collection is empty", paramName, typeName, context);
+            throw new System.ArgumentException(message, paramName);
+        }
+        #endregion
+
         #region Validate Component Exists
         public static void ValidateComponentExists<T>(GameObject target, Object context = null, [CallerArgumentExpression("target")] string paramName = "") where T : Component
         {
@@ -90,5 +134,27 @@ namespace Mantega.Diagnostics
             throw new System.ArgumentOutOfRangeException(paramName, actualValue, message);
         }
         #endregion
+
+        #region Validate Greater Than 
+        public static void ValidateGreaterThan(int value, int threshold, Object context = null, [CallerArgumentExpression("value")] string paramName = "")
+        {
+            if (value <= threshold)
+                ThrowNotGreaterThan(paramName, value, threshold, nameof(System.Int32), context);
+        }
+
+        public static void ValidateGreaterThan(float value, float threshold, Object context = null, [CallerArgumentExpression("value")] string paramName = "")
+        {
+            if (value <= threshold)
+                ThrowNotGreaterThan(paramName, value, threshold, nameof(System.Single), context);
+        }
+
+        private static void ThrowNotGreaterThan(string paramName, object actualValue, object threshold, string typeName, Object context)
+        {
+            string reason = $"The value is not greater than the required threshold (Threshold: {threshold}, Current value: {actualValue})";
+            string message = BuildErrorMessage(reason, paramName, typeName, context);
+            throw new System.ArgumentOutOfRangeException(paramName, actualValue, message);
+        }
+        #endregion
+    
     }
 }
