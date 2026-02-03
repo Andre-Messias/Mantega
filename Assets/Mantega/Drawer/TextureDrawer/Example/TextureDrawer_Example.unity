@@ -596,7 +596,7 @@ GameObject:
   - component: {fileID: 1552763071}
   - component: {fileID: 1552763070}
   m_Layer: 0
-  m_Name: TextureDrawer
+  m_Name: TextureDrawer_Example
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
