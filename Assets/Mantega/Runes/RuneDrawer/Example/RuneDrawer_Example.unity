@@ -537,7 +537,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DrawingController
   _drawingCamera: {fileID: 1204336010}
-  _linePrefab: {fileID: 1846113919565815045, guid: 6503e64fef174b0448fea23cf381dbf4, type: 3}
+  _linePrefab: {fileID: 1846113919565815045, guid: 41f988d92894e654ba864c1a6ded5527, type: 3}
   _drawingParent: {fileID: 1904265400}
   _minDrawingDistance: 0.1
   EnableDrawing: 1
