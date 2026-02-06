@@ -129,6 +129,7 @@ GameObject:
   m_Component:
   - component: {fileID: 27945747}
   - component: {fileID: 27945746}
+  - component: {fileID: 27945748}
   m_Layer: 0
   m_Name: SiameseRuneMatcher_Example
   m_TagString: Untagged
@@ -149,8 +150,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Mantega.AI.Siamese
   _modelAsset: {fileID: 5022602860645237092, guid: 673d399dfffa0dc459544d51a16323a9, type: 3}
-  _textureDraw1: {fileID: 2800000, guid: 178271b163897ba4794d75f2ea42126d, type: 3}
-  _textureDraw2: {fileID: 2800000, guid: a1853c0f34e01cf498aeb82228d5c171, type: 3}
 --- !u!4 &27945747
 Transform:
   m_ObjectHideFlags: 0
@@ -166,6 +165,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &27945748
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 27945745}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fdf687007b9cadd4fa55cc4312f8e4bf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Mantega.AI.Example.SiameseRuneMatcher_Example
+  _runeMatcher: {fileID: 27945746}
+  _runeTexture1: {fileID: 2800000, guid: 06f1649c33179e644b2c8f5cf554470d, type: 3}
+  _runeTexture2: {fileID: 2800000, guid: 23d94866fdfb2d642a70957e482d1d10, type: 3}
 --- !u!1 &1131736127
 GameObject:
   m_ObjectHideFlags: 0

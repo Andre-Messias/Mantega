@@ -35,6 +35,7 @@ namespace Mantega.AI
             _tensor2 = new Tensor<float>(inputShape);
         }
 
+
         public float Compare(Texture2D texture1, Texture2D texture2)
         {
             Validations.ValidateNotNull(texture1);
