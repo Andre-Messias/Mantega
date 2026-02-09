@@ -1,6 +1,6 @@
 using UnityEngine;
 
-using Mantega.Syncables;
+using Mantega.Core.Syncables;
 using Mantega.Stats;
 using Mantega.Variables;
 

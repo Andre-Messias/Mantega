@@ -150,164 +150,9 @@ namespace Mantega
         }
     }
 
-    namespace Syncables
-    {
-        using Editor;
-
-        /// <summary>
-        /// Represents a read-only synchronization interface for a value of type <typeparamref name="T"/>.
-        /// </summary>
-        /// <remarks>This interface provides access to a value that can be observed for changes. Consumers can
-        /// subscribe to the <see cref="OnValueChanged"/> event to be notified when the value changes.</remarks>
-        /// <typeparam name="T">The type of the value being synchronized.</typeparam>
-        public interface IReadOnlySyncable<T>
-        {
-            /// <summary>
-            /// Gets the value stored in the current instance.
-            /// </summary>
-            public T Value { get; }
-
-            /// <summary>
-            /// Occurs when the value changes, providing the previous and current values.
-            /// </summary>
-            /// <remarks>This event is triggered whenever the value is updated. The first parameter represents
-            /// the previous value, and the second parameter represents the new value. Subscribers can use this event to
-            /// react to changes in the value.</remarks>
-            public event Action<T, T> OnValueChanged;
-        }
-
-        /// <summary>
-        /// Represents an interface for notifying subscribers about internal changes.
-        /// </summary>
-        /// <remarks>This interface defines an event that is triggered whenever an internal change occurs.
-        /// Implementers of this interface can use the <see cref="OnInternalChange"/> event to notify subscribers about
-        /// state changes or other relevant updates.</remarks>
-        public interface IInternalChange<T> : ITypedClonable<T>
-        {
-            /// <summary>
-            /// Occurs when a change is detected, providing the old and new values of the changed item.
-            /// </summary>
-            /// <remarks>This event is triggered whenever an internal change occurs. The first parameter represents
-            /// the previous value, and the second parameter represents the new value. Subscribers can use this event to react to changes in
-            /// the state or data.</remarks>
-            event Action<T, T> OnInternalChange;
-        }
-
-        /// <summary>
-        /// Represents a synchronizable value of type <typeparamref name="T"/> that notifies subscribers when its value
-        /// changes.
-        /// </summary>
-        /// <remarks>The <see cref="Syncable{T}"/> class provides a mechanism to track changes to a value and
-        /// notify listeners via the <see cref="OnValueChanged"/> event. If <typeparamref name="T"/> have internal changes it must implement <see cref="IInternalChange{T}"/>.</remarks>
-        /// <typeparam name="T">The type of the value being synchronized, if it has internal changes it must implement <see cref="IInternalChange{T}"/>.</typeparam>
-        [Serializable]
-        public class Syncable<T> : IReadOnlySyncable<T>
-        {
-            // VALUE
-            // [Header("Value")]
-
-            /// <summary>
-            /// The backing field that stores the current <typeparamref name="T"/> value of the object
-            /// </summary>
-            [SerializeField, CallOnChange(nameof(EditorSetValue))] private T _value;
-
-            /// <summary>
-            /// The current value of the object
-            /// </summary>
-            /// <remarks>When the value is updated, the <see cref="OnValueChanged"/> event is invoked with the
-            /// old and new values, allowing subscribers to react to the change</remarks>
-            public T Value
-            {
-                get => _value;
-                set
-                {
-                    // No change
-                    if (EqualityComparer<T>.Default.Equals(_value, value)) return;
-
-                    T oldValue = _value;
-                    SetValue(value);
-
-                    OnValueChanged?.Invoke(oldValue, _value);
-                }
-            }
-
-            // EVENTS
-            // [Header("Events")]
-
-            /// <summary>
-            /// Occurs when the value changes, providing the previous and current <typeparamref name="T"/> values.
-            /// </summary>
-            /// <remarks>This event is triggered whenever the value is updated or an internal change happen (in this case oldValue == newValue). The first parameter represents
-            /// the previous value, and the second parameter represents the new value. Subscribers can use this event to
-            /// respond to changes in the value.</remarks>
-            public event Action<T, T> OnValueChanged;
-
-            /// <summary>
-            /// Initializes a new instance of the <see cref="Syncable{T}"/> class with the specified initial value
-            /// </summary>
-            /// <param name="initialValue">The initial value to set for the syncable object</param>
-            public Syncable(T initialValue)
-            {
-                _value = initialValue;
-            }
-
-            /// <summary>
-            /// Sets the value of the current instance to the specified value
-            /// </summary>
-            /// <param name="newValue">The new value to assign to the instance</param>
-
-            private void SetValue(T newValue)
-            {
-                if (_value is IInternalChange<T> oldInternalChange)
-                {
-                    oldInternalChange.OnInternalChange -= HandleInternalChange;
-                }
-
-                _value = newValue;
-
-                if (_value is IInternalChange<T> newInternalChange)
-                {
-                    newInternalChange.OnInternalChange += HandleInternalChange;
-                }
-            }
-
-            /// <summary>
-            /// Handles internal changes to the value and triggers the <see cref="OnValueChanged"/> event
-            /// </summary>
-            /// <remarks>This method invokes the <see cref="OnValueChanged"/> event with the current value as
-            /// both the old and new values. It is intended for internal use to propagate changes within the
-            /// system</remarks>
-            /// <param name="internalValue">The change value</param>
-            private void HandleInternalChange(T oldValue, T newValue)
-            {
-                OnValueChanged?.Invoke(oldValue, newValue);
-            }
-
-            /// <summary>
-            /// Implicitly converts a <see cref="Syncable{T}"/> instance to its underlying value of type <typeparamref
-            /// name="T"/>.
-            /// </summary>
-            /// <param name="syncable">The <see cref="Syncable{T}"/> instance to convert. Must not be <c>null</c></param>
-            public static implicit operator T([DisallowNull] Syncable<T> syncable) => syncable.Value;
-
-            /// <summary>
-            /// Sets the value of the object in the Unity Editor and triggers the <see cref="OnValueChanged"/>
-            /// </summary>
-            /// <remarks>This method is intended for use in the Unity Editor only. It updates the value of the
-            /// object and invokes the <see cref="OnValueChanged"/> event to notify listeners of the change</remarks>
-            /// <param name="oldValue">The previous value of the object</param>
-            /// <param name="newValue">The new value to set for the object</param>
-            private void EditorSetValue(T oldValue, T newValue)
-            {
-                SetValue(newValue);
-                OnValueChanged?.Invoke(oldValue, newValue);
-            }
-        }
-    }
-
     namespace Variables
     {
-        using Syncables;
+        using Mantega.Core.Syncables;
 
 #if UNITY_EDITOR
         using Editor;
@@ -512,25 +357,26 @@ namespace Mantega
 
     }
 
-    namespace Beta
-    {
-        using Syncables;
-
-#if UNITY_EDITOR
-        using Editor;
-#endif
-
-    }
-
     namespace Editor
     {
         #region CallOnChange
         /// <summary>
-        /// Specifies that a method should be invoked when the value of the decorated field changes
+        /// Specifies that a method should be invoked when the value of the decorated field changes.
         /// </summary>
-        /// <remarks>This attribute is applied to fields to indicate that a specific method should be called
-        /// whenever the field's value changes. The method specified by <paramref name="methodName"/> must exist in the
-        /// same class as the decorated field</remarks>
+        /// <remarks>
+        /// <para>
+        /// This attribute is applied to fields to indicate that a specific method should be called
+        /// whenever the field's value changes.
+        /// </para>
+        /// <para>
+        /// The method specified by <paramref name="methodName"/> must exist in the same class 
+        /// as the decorated field and match one of the following signatures:
+        /// <list type="bullet">
+        /// <item><description><b>Two parameters:</b> Accepts the old value and the new value.</description></item>
+        /// <item><description><b>No parameters:</b> Simple notification.</description></item>
+        /// </list>
+        /// </para>
+        /// </remarks>
         [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
         public class CallOnChangeAttribute : PropertyAttribute
         {
@@ -588,8 +434,20 @@ namespace Mantega
 
                     if (method != null)
                     {
-                        // Call the method
-                        method.Invoke(targetObject, new[] { oldValue, newValue });
+                        var parameters = method.GetParameters();
+                        if(parameters.Length == 2)
+                        {
+                            // Call the method
+                            method.Invoke(targetObject, new[] { oldValue, newValue });
+                        }
+                        else if(parameters.Length == 0)
+                        {
+                            method.Invoke(targetObject, null);
+                        }
+                        else
+                        {
+                            Debug.LogError($"[CallOnChange] Method '{callOnChangeAttribute.MethodName}' in '{targetType.Name}' must have either 0 or 2 parameters (old value and new value).");
+                        }
                     }
                     else
                     {
