@@ -8,8 +8,8 @@ using static Mantega.Stats.StatType;
 
 #if UNITY_EDITOR
 using System.Collections.Generic;
-using Mantega.Reflection;
-using Mantega.Editor;
+using Mantega.Core.Reflection;
+using Mantega.Core.Editor;
 using UnityEditor;
 #endif
 

@@ -9,7 +9,7 @@ namespace Mantega.Core.Syncables.Example
 
 #if UNITY_EDITOR
     using UnityEditor;
-    using Mantega.Editor;
+    using Mantega.Core.Editor;
 #endif
 
     public class Syncables_Example : MonoBehaviour

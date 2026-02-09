@@ -3,12 +3,12 @@ using UnityEngine;
 
 namespace Mantega.Stats
 {
-    using Mantega.Reflection;
+    using Mantega.Core.Reflection;
 
 #if UNITY_EDITOR
     using Unity.VisualScripting;
     using UnityEditor;
-    using Mantega.Editor;
+    using Mantega.Core.Editor;
 #endif
     public static partial class StatType
     {
