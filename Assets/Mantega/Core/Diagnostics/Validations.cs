@@ -1,4 +1,4 @@
-namespace Mantega.Diagnostics
+namespace Mantega.Core.Diagnostics
 {
     using System.Runtime.CompilerServices;
     using UnityEngine;
@@ -7,10 +7,8 @@ namespace Mantega.Diagnostics
     {
         private static string BuildErrorMessage(string reason, string paramName, string typeName, Object context)
         {
-            string header = context != null ? $"[{context.GetType().Name}]" : "[Mantega]";
-            string location = context != null ? $" on GameObject '{context.name}'" : "";
-
-            return $"{header} Validation failed: {reason}. Variable '{paramName}' (Type: {typeName}){location}.";
+            string baseMsg = $"Validation failed: {reason}. Variable '{paramName}' (Type: {typeName})";
+            return Log.FormatMessage(baseMsg, "", context);
         }
 
         #region Validate Not Null

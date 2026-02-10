@@ -3,7 +3,7 @@ namespace Mantega.AI
     using UnityEngine;
     using Unity.InferenceEngine;
 
-    using Mantega.Diagnostics;
+    using Mantega.Core.Diagnostics;
 
     public class SiameseRuneMatcher : MonoBehaviour
     {

@@ -4,7 +4,7 @@ namespace Mantega.Core.Syncables
     using System;
     using System.Collections.Generic;
 
-    using Mantega.Diagnostics;
+    using Mantega.Core.Diagnostics;
 
 #if UNITY_EDITOR
     using Editor;

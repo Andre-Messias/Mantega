@@ -4,7 +4,7 @@ namespace Mantega.AI
     using UnityEngine;
 
     using Mantega.Geometry;
-    using Mantega.Diagnostics;
+    using Mantega.Core.Diagnostics;
 
     /// <summary>
     /// Provides functionality for the $P Point-Cloud Recognizer algorithm.

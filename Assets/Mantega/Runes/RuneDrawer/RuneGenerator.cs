@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-using Mantega.Diagnostics;
+using Mantega.Core.Diagnostics;
 using Mantega.Drawer; 
 using Mantega.Geometry;
 

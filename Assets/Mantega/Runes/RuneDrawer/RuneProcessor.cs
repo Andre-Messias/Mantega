@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-using Mantega.Diagnostics;
+using Mantega.Core.Diagnostics;
 using Mantega.Geometry; 
 
 namespace Mantega.Runes

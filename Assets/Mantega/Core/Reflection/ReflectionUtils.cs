@@ -5,7 +5,7 @@ namespace Mantega.Core.Reflection
     using System.Linq;
     using System.Reflection;
 
-    using Mantega.Diagnostics;
+    using Mantega.Core.Diagnostics;
 
     /// <summary>
     /// Provides utility methods for working with reflection, such as discovering types that implement specific

@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
-using Mantega.Diagnostics;
+using Mantega.Core.Diagnostics;
 
 namespace Mantega.Drawer
 {
