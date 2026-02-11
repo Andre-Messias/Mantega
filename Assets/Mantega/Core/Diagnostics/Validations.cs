@@ -8,7 +8,7 @@ namespace Mantega.Core.Diagnostics
         private static string BuildErrorMessage(string reason, string paramName, string typeName, Object context)
         {
             string baseMsg = $"Validation failed: {reason}. Variable '{paramName}' (Type: {typeName})";
-            return Log.FormatMessage(baseMsg, "", context);
+            return Log.FormatMessage(baseMsg, context);
         }
 
         #region Validate Not Null
