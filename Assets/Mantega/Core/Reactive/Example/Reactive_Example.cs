@@ -7,12 +7,15 @@ namespace Mantega.Core.Reactive.Example
     using System;
     using UnityEngine;
 
+    using Mantega.Core.Reactive;
+
 #if UNITY_EDITOR
     using UnityEditor;
     using Mantega.Core.Editor;
+    using Mantega.Core.Diagnostics;
 #endif
 
-    public class Syncables_Example : MonoBehaviour
+    public class Reactive_Example : MonoBehaviour
     {
         [Serializable]
         private class InternalChange_Example : IInternalChange<InternalChange_Example>
@@ -82,13 +85,14 @@ namespace Mantega.Core.Reactive.Example
         // IReadOnlySyncable - Allows you to read the value and subscribe to the event, but not modify it. Useful for exposing Syncables without allowing external modification.
         public IReadOnlySyncable<Color> ColorSyncable => _colorSyncable;
 
-        // DeferedEvent - Used to call a function when the object is ready
-        private DeferredEvent<int> _deferredEvent = new();
+        // DeferredEvent - Used to call a function when the object is ready
+        public DeferredEvent<int> _deferredEvent = new();
 
         private void OnEnable()
         {
             _colorSyncable.OnValueChanged += OnColorChange;
             _internalChangeSyncable.OnValueChanged += OnInternalChange;
+            AskDeferredEvent();
         }
 
         private void OnDisable()
@@ -117,6 +121,18 @@ namespace Mantega.Core.Reactive.Example
             Debug.Log($"Internal Change Syncable Changed: Value1: {oldValue.Value1} -> {newValue.Value1}, Value2: {oldValue.Value2} -> {newValue.Value2}");
         }
 
+        public void AskDeferredEvent()
+        {
+            Debug.Log("Asked Deferred Event. If it has already been fired, the callback will be invoked immediately. Otherwise, it will be invoked once the event is fired.");
+            _deferredEvent.Then(OnDeferrendEvent);
+        }
+
+        private void OnDeferrendEvent(int value)
+        {
+            if (this == null) return;
+            Debug.Log($"Deferred Event Fired with value: {value}");
+        }
+
 #if UNITY_EDITOR
         private void OnEditorChangeColor()
         {
@@ -128,7 +144,7 @@ namespace Mantega.Core.Reactive.Example
             OnInternalChange();
         }
         
-        [CustomEditor(typeof(Syncables_Example))]
+        [CustomEditor(typeof(Reactive_Example))]
         public class Syncables_ExampleEditor : Editor
         {
             private Color GenerateRandomColor() => new(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value);
@@ -136,14 +152,14 @@ namespace Mantega.Core.Reactive.Example
             public override void OnInspectorGUI()
             {
                 base.OnInspectorGUI();
+                Reactive_Example example = (Reactive_Example)target;
 
                 // Title
                 EditorGUILayout.Space(10);
-                EditorGUILayout.LabelField("Changes Example", EditorStyles.boldLabel);
-                Syncables_Example example = (Syncables_Example)target;
+                EditorGUILayout.LabelField("Syncable Changes Example", EditorStyles.boldLabel);
 
                 // Changing syncable values
-                bool buttonPressed = true;
+                bool changeButtonPressed = true;
                 if (GUILayout.Button("Change Color Syncable"))
                 {
                     example._colorSyncable.Value = GenerateRandomColor();
@@ -158,10 +174,29 @@ namespace Mantega.Core.Reactive.Example
                 }
                 else
                 {
-                    buttonPressed = false;
+                    changeButtonPressed = false;
                 }
 
-                if (buttonPressed)
+                // Title
+                EditorGUILayout.Space(10);
+                EditorGUILayout.LabelField("DeferredEvent Example", EditorStyles.boldLabel);
+
+                // Firing the deferred event
+                if(GUILayout.Button("Fire Deferred Event with random value"))
+                {
+                    example._deferredEvent.Fire(UnityEngine.Random.Range(0, 100));
+                }
+                else if(GUILayout.Button("Reset Deferred Event"))
+                {
+                    example._deferredEvent.Reset();
+                    Debug.Log("Deferred Event Reset. You can now fire it again to see the changes.");
+                }
+                else if(GUILayout.Button("Ask Deferred Event"))
+                {
+                    example.AskDeferredEvent();
+                }
+
+                if (changeButtonPressed)
                 {
                     // Mark the object as dirty to ensure changes are saved and reflected in the editor
                     EditorUtility.SetDirty(example);

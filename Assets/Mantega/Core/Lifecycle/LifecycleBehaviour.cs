@@ -157,6 +157,5 @@ namespace Mantega.Core.Lifecycle
         }
         #endregion
     
-        public void 
     }
 }
