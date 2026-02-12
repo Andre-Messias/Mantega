@@ -1,4 +1,4 @@
-namespace Mantega.Core.Syncables
+namespace Mantega.Core.Reactive
 {
     using UnityEngine;
     using System;

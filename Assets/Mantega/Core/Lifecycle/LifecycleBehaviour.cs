@@ -3,16 +3,16 @@ namespace Mantega.Core.Lifecycle
     using UnityEngine;
 
     using Mantega.Core.Diagnostics;
-    using Mantega.Core.Syncables;
+    using Mantega.Core.Reactive;
     using LifecyclePhase = ILifecycle.LifecyclePhase;
 
     public abstract class LifecycleBehaviour : MonoBehaviour, ILifecycle
     {
         [SerializeField] protected Syncable<LifecyclePhase> _status = new(LifecyclePhase.Uninitialized);
         public IReadOnlySyncable<LifecyclePhase> SyncableStatus => _status;
+        public virtual LifecyclePhase Status => _status;
 
         #region Initialization
-        public virtual LifecyclePhase Status => _status;
 
         public void Initialize()
         {
@@ -156,5 +156,7 @@ namespace Mantega.Core.Lifecycle
             return CanFixFault(_status);
         }
         #endregion
+    
+        public void 
     }
 }

@@ -3,7 +3,7 @@ namespace Mantega.Core.Variables
     using System;
     using UnityEngine;
 
-    using Mantega.Core.Syncables;
+    using Mantega.Core.Reactive;
 
 #if UNITY_EDITOR
     using Mantega.Core.Editor;

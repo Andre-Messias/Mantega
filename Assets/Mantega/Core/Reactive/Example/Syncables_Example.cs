@@ -1,4 +1,4 @@
-namespace Mantega.Core.Syncables.Example
+namespace Mantega.Core.Reactive.Example
 {
     ///
     /// This script demonstrates how to use the Syncable and IInternalChange interfaces to create a synchronizable value that notifies subscribers of changes, including internal changes. 
@@ -81,6 +81,9 @@ namespace Mantega.Core.Syncables.Example
 
         // IReadOnlySyncable - Allows you to read the value and subscribe to the event, but not modify it. Useful for exposing Syncables without allowing external modification.
         public IReadOnlySyncable<Color> ColorSyncable => _colorSyncable;
+
+        // DeferedEvent - Used to call a function when the object is ready
+        private DeferredEvent<int> _deferredEvent = new();
 
         private void OnEnable()
         {
