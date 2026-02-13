@@ -41,4 +41,13 @@ namespace Mantega.Core.Reactive
         /// <inheritdoc cref="Remove(Action{T})"/>
         public void Remove(Action callback);
     }
+
+    /// <inheritdoc />
+    public interface IReadOnlyDeferredEvent : IReadOnlyDeferredEvent<Unit>
+    {
+        /// <param name="callback">The action to execute when the event becomes available. Cannot be <see langword="null"/>.</param>
+        /// <returns>The current instance of <see cref="IReadOnlyDeferredEvent"/> to allow chaining.</returns>
+        /// <inheritdoc cref="IReadOnlyDeferredEvent{T}.Then(Action)"/>
+        new IReadOnlyDeferredEvent Then(Action callback);
+    }
 }

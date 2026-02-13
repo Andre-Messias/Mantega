@@ -265,7 +265,7 @@ namespace Mantega.Core.Reactive
     /// <remarks>Use this class when you need to signal an event occurrence without passing any payload to
     /// event handlers. This is a specialization of <see cref="DeferredEvent{Unit}"/> for scenarios where only the event notification
     /// is required.</remarks>
-    public class DeferredEvent : DeferredEvent<Unit>
+    public class DeferredEvent : DeferredEvent<Unit>, IReadOnlyDeferredEvent
     {
         /// <summary>
         /// Invokes all registered listeners, if this method has not already been called.
@@ -274,5 +274,11 @@ namespace Mantega.Core.Reactive
         /// information needs to be provided to event handlers. It is equivalent to calling the base Fire method with a
         /// default unit value.</remarks>
         public void Fire() => base.Fire(Unit.Default);
+
+        public new IReadOnlyDeferredEvent Then(Action callback)
+        {
+            base.Then(callback);
+            return this;
+        }
     }
 }

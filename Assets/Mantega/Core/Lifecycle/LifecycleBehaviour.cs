@@ -5,12 +5,17 @@ namespace Mantega.Core.Lifecycle
     using Mantega.Core.Diagnostics;
     using Mantega.Core.Reactive;
     using LifecyclePhase = ILifecycle.LifecyclePhase;
+    using System;
 
+    [Serializable]
     public abstract class LifecycleBehaviour : MonoBehaviour, ILifecycle
     {
         [SerializeField] protected Syncable<LifecyclePhase> _status = new(LifecyclePhase.Uninitialized);
         public IReadOnlySyncable<LifecyclePhase> SyncableStatus => _status;
-        public virtual LifecyclePhase Status => _status;
+        public LifecyclePhase Status => _status;
+
+        private DeferredEvent _initialized = new();
+        public IReadOnlyDeferredEvent Initialized => _initialized;
 
         #region Initialization
 
