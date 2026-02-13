@@ -17,10 +17,7 @@ namespace Mantega.Core.Lifecycle
         private readonly DeferredEvent _initialized = new();
         public IReadOnlyDeferredEvent Initialized => _initialized;
 
-        private void Awake()
-        {
-            Initialized.
-        }
+        
 
         #region Initialization
 
