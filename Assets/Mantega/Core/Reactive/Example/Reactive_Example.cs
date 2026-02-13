@@ -12,7 +12,6 @@ namespace Mantega.Core.Reactive.Example
 #if UNITY_EDITOR
     using UnityEditor;
     using Mantega.Core.Editor;
-    using Mantega.Core.Diagnostics;
 #endif
 
     public class Reactive_Example : MonoBehaviour
@@ -86,13 +85,15 @@ namespace Mantega.Core.Reactive.Example
         public IReadOnlySyncable<Color> ColorSyncable => _colorSyncable;
 
         // DeferredEvent - Used to call a function when the object is ready
-        public DeferredEvent<int> _deferredEvent = new();
+        [SerializeField] private DeferredEvent<int> _deferredEvent = new();
+
+        // IReadOnlyDeferredEvent - Allows you to subscribe to the event, but not fire it. Useful for exposing DeferredEvents without allowing external firing.
+        public IReadOnlyDeferredEvent<int> DeferredEvent => _deferredEvent;
 
         private void OnEnable()
         {
             _colorSyncable.OnValueChanged += OnColorChange;
             _internalChangeSyncable.OnValueChanged += OnInternalChange;
-            AskDeferredEvent();
         }
 
         private void OnDisable()

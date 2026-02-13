@@ -1,6 +1,7 @@
 namespace Mantega.Core.Reactive
 {
     using System;
+    using System.Collections.Generic;
 
     using Mantega.Core.Diagnostics;
 
@@ -13,7 +14,7 @@ namespace Mantega.Core.Reactive
     /// clear the state and allow reuse of the object. This class is not thread-safe; synchronize access if used in
     /// multithreaded scenarios.</remarks>
     /// <typeparam name="T">The type of value associated with the event when it is fired.</typeparam>
-    public class DeferredEvent<T>
+    public class DeferredEvent<T> : IReadOnlyDeferredEvent<T>
     {
         #region HasFired
         /// <summary>
@@ -21,9 +22,6 @@ namespace Mantega.Core.Reactive
         /// </summary>
         private bool _hasFired;
 
-        /// <summary>
-        /// Gets a value indicating whether the event has already fired.
-        /// </summary>
         public bool HasFired => _hasFired;
         #endregion
 
@@ -33,9 +31,7 @@ namespace Mantega.Core.Reactive
         /// </summary>
         private T _value;
 
-        /// <summary>
-        /// Gets the value with which the event was fired.
-        /// </summary>
+        
         public T Value => _value;
         #endregion
 
@@ -46,14 +42,18 @@ namespace Mantega.Core.Reactive
         private Action<T> _listeners;
         #endregion
 
+        #region WrapperMap
         /// <summary>
-        /// Registers a callback to be invoked when the event is ready.
+        /// Internal mapping of original callbacks to their wrapped counterparts for removal purposes.
         /// </summary>
+        private Dictionary<Action, List<Action<T>>> _wrapperMap;
+        #endregion
+
         /// <remarks>If the result is already available when this method is called, the callback is
         /// invoked immediately. Otherwise, the callback is invoked once the result becomes available. Multiple
         /// callbacks may be registered and will be invoked in the order they were added.</remarks>
-        /// <param name="callback">The action to execute with the <see cref="_value"/> when it becomes available. Cannot be <see langword="null"/>.</param>
-        public DeferredEvent<T> Then(Action<T> callback)
+        /// <inheritdoc cref="IReadOnlyDeferredEvent{T}.Then(Action{T})"/>
+        public IReadOnlyDeferredEvent<T> Then(Action<T> callback)
         {
             Validations.ValidateNotNull(callback);
 
@@ -69,12 +69,83 @@ namespace Mantega.Core.Reactive
             return this;
         }
 
+        /// <remarks>
+        /// This method wraps the provided <paramref name="callback"/> in an internal adapter. If the result is already available when this method is called, the callback is
+        /// invoked immediately. Otherwise, the callback is invoked once the result becomes available.
+        /// <para>
+        /// <b>Performance Note:</b> This method incurs higher memory allocation overhead than <see cref="Then(Action{T})"/> 
+        /// because it requires internal dictionary tracking to map the original callback to its wrapper. 
+        /// Prefer using <see cref="Then(Action{T})"/> in performance-critical code paths to avoid this extra allocation.
+        /// </para>
+        /// </remarks>
         /// <inheritdoc cref="Then(Action{T})"/>/>
-        public DeferredEvent<T> Then(Action callback)
+        public IReadOnlyDeferredEvent<T> Then(Action callback)
         {
             Validations.ValidateNotNull(callback);
 
-            return Then(_ => callback());
+            if (_hasFired)
+            {
+                callback.Invoke();
+                return this;
+            }
+
+            _wrapperMap ??= new();
+            Action<T> wrapper = (_ => callback());
+            if (!_wrapperMap.TryGetValue(callback, out List<Action<T>> wrapperList))
+            {
+                wrapperList = new List<Action<T>>();
+                _wrapperMap.Add(callback, wrapperList);
+            }
+
+            wrapperList.Add(wrapper);
+            return Then(wrapper);
+        }
+
+
+        /// <remarks>
+        /// This method effectively unsubscribes the listener. 
+        /// </remarks>
+        /// <inheritdoc cref="Remove(Action{T})"/>/>
+        public void Remove(Action<T> callback)
+        {
+            Validations.ValidateNotNull(callback);
+
+            if (_listeners == null) return;
+            _listeners -= callback;
+        }
+
+        /// <remarks>
+        /// This method performs a dictionary lookup to find the internal wrapper associated with the provided <paramref name="callback"/>.
+        /// <para>
+        /// <b>Multiple Registrations:</b> If the specific <paramref name="callback"/> was registered multiple times, 
+        /// this method removes the <b>most recently added</b> instance (LIFO behavior). You must call <c>Remove</c> once 
+        /// for each time you called <c>Then</c> to completely unsubscribe.
+        /// </para>
+        /// </remarks>
+        /// <inheritdoc cref="Remove(Action{T})"/>
+        public void Remove(Action callback)
+        {
+            Validations.ValidateNotNull(callback);
+
+            if (_listeners == null || _wrapperMap == null) return;
+            if (_wrapperMap.TryGetValue(callback, out List<Action<T>> wrapperList))
+            {
+                if (wrapperList.Count > 0)
+                {
+                    // Last wrapper is the most recently added
+                    int lastIndex = wrapperList.Count - 1;
+                    Action<T> wrapperToRemove = wrapperList[lastIndex];
+
+                    _listeners -= wrapperToRemove;
+                    wrapperList.RemoveAt(lastIndex);
+
+                    // Empty wrapper list means no more wrappers for this callback
+                    if (wrapperList.Count == 0)
+                    {
+                        _wrapperMap.Remove(callback);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -94,9 +165,15 @@ namespace Mantega.Core.Reactive
             _hasFired = true;
             _value = value;
 
-            _listeners?.Invoke(value);
-
-            _listeners = null;
+            try
+            {
+                _listeners?.Invoke(value);
+            }
+            finally
+            {
+                _listeners = null;
+                _wrapperMap = null;
+            }
         }
 
         /// <summary>
@@ -110,6 +187,7 @@ namespace Mantega.Core.Reactive
             _hasFired = false;
             _value = default;
             _listeners = null;
+            _wrapperMap = null;
         }
     }
 
