@@ -22,7 +22,10 @@ namespace Mantega.Core.Reactive
         /// </summary>
         private bool _hasFired;
 
-        public bool HasFired => _hasFired;
+        public bool HasFired
+        { 
+            get { lock (_lock) return _hasFired; } 
+        }
         #endregion
 
         #region Value
@@ -31,8 +34,10 @@ namespace Mantega.Core.Reactive
         /// </summary>
         private T _value;
 
-        
-        public T Value => _value;
+        public T Value 
+        { 
+            get { lock (_lock) return _value; } 
+        }
         #endregion
 
         #region Listeners
@@ -49,6 +54,12 @@ namespace Mantega.Core.Reactive
         private Dictionary<Action, List<Action<T>>> _wrapperMap;
         #endregion
 
+        /// <summary>
+        /// Serves as a lock object to synchronize access to the internal state of the <see cref="DeferredEvent{T}"/>.
+        /// </summary>
+        /// <remarks>This ensures thread safety for operations that modify or read the state.</remarks>
+        private readonly object _lock = new();
+
         /// <remarks>If the result is already available when this method is called, the callback is
         /// invoked immediately. Otherwise, the callback is invoked once the result becomes available. Multiple
         /// callbacks may be registered and will be invoked in the order they were added.</remarks>
@@ -57,13 +68,26 @@ namespace Mantega.Core.Reactive
         {
             Validations.ValidateNotNull(callback);
 
-            if (_hasFired)
+            bool fireImmediately = false;
+            T capturedValue = default;
+
+            lock (_lock)
             {
-                callback.Invoke(_value);
+                if (_hasFired)
+                {
+                    fireImmediately = true;
+                    capturedValue = _value;
+                }
+                else
+                {
+                    _listeners += callback;
+                }
             }
-            else
+
+            // Avoid invoking the callback while holding the lock to prevent potential deadlocks or performance issues if the callback is long-running.
+            if (fireImmediately)
             {
-                _listeners += callback;
+                callback.Invoke(capturedValue);
             }
 
             return this;
@@ -83,21 +107,37 @@ namespace Mantega.Core.Reactive
         {
             Validations.ValidateNotNull(callback);
 
-            if (_hasFired)
+            bool fireImmediately = false;
+            Action<T> wrapper = null;
+
+            lock (_lock)
+            {
+                if (_hasFired)
+                {
+                    fireImmediately = true;
+                }
+                else
+                {
+                    _wrapperMap ??= new();
+
+                    wrapper = (_ => callback());
+
+                    if (!_wrapperMap.TryGetValue(callback, out List<Action<T>> wrapperList))
+                    {
+                        wrapperList = new List<Action<T>>();
+                        _wrapperMap.Add(callback, wrapperList);
+                    }
+                    wrapperList.Add(wrapper);
+                }
+            }
+
+            // Avoid invoking the callback while holding the lock to prevent potential deadlocks or performance issues if the callback is long-running.
+            if (fireImmediately)
             {
                 callback.Invoke();
                 return this;
             }
 
-            _wrapperMap ??= new();
-            Action<T> wrapper = (_ => callback());
-            if (!_wrapperMap.TryGetValue(callback, out List<Action<T>> wrapperList))
-            {
-                wrapperList = new List<Action<T>>();
-                _wrapperMap.Add(callback, wrapperList);
-            }
-
-            wrapperList.Add(wrapper);
             return Then(wrapper);
         }
 
@@ -110,8 +150,11 @@ namespace Mantega.Core.Reactive
         {
             Validations.ValidateNotNull(callback);
 
-            if (_listeners == null) return;
-            _listeners -= callback;
+            lock (_lock)
+            {
+                if (_listeners == null) return;
+                _listeners -= callback;
+            }
         }
 
         /// <remarks>
@@ -127,22 +170,25 @@ namespace Mantega.Core.Reactive
         {
             Validations.ValidateNotNull(callback);
 
-            if (_listeners == null || _wrapperMap == null) return;
-            if (_wrapperMap.TryGetValue(callback, out List<Action<T>> wrapperList))
+            lock (_lock)
             {
-                if (wrapperList.Count > 0)
+                if (_listeners == null || _wrapperMap == null) return;
+                if (_wrapperMap.TryGetValue(callback, out List<Action<T>> wrapperList))
                 {
-                    // Last wrapper is the most recently added
-                    int lastIndex = wrapperList.Count - 1;
-                    Action<T> wrapperToRemove = wrapperList[lastIndex];
-
-                    _listeners -= wrapperToRemove;
-                    wrapperList.RemoveAt(lastIndex);
-
-                    // Empty wrapper list means no more wrappers for this callback
-                    if (wrapperList.Count == 0)
+                    if (wrapperList.Count > 0)
                     {
-                        _wrapperMap.Remove(callback);
+                        // Last wrapper is the most recently added.
+                        int lastIndex = wrapperList.Count - 1;
+                        Action<T> wrapperToRemove = wrapperList[lastIndex];
+
+                        _listeners -= wrapperToRemove;
+                        wrapperList.RemoveAt(lastIndex);
+
+                        // Empty wrapper list means no more wrappers for this callback.
+                        if (wrapperList.Count == 0)
+                        {
+                            _wrapperMap.Remove(callback);
+                        }
                     }
                 }
             }
@@ -156,23 +202,38 @@ namespace Mantega.Core.Reactive
         /// <param name="value">The value to pass to each registered listener.</param>
         public void Fire(T value)
         {
-            if (_hasFired)
-            {
-                Log.Warning("Attempted to fire DeferredEvent more than once. This call will be ignored.");
-                return;
-            }
+            Action<T> toInvoke = null;
 
-            _hasFired = true;
-            _value = value;
+            lock (_lock)
+            {
+                if (_hasFired)
+                {
+                    Log.Warning($"Attempted to fire {nameof(DeferredEvent)} more than once.");
+                    return;
+                }
 
-            try
-            {
-                _listeners?.Invoke(value);
-            }
-            finally
-            {
+                _hasFired = true;
+                _value = value;
+
+                toInvoke = _listeners;
                 _listeners = null;
                 _wrapperMap = null;
+            }
+
+            if (toInvoke == null) return;
+
+            Delegate[] invocationList = toInvoke.GetInvocationList();
+
+            foreach (Delegate handler in invocationList)
+            {
+                try
+                {
+                    ((Action<T>)handler).Invoke(value);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"Error in {nameof(DeferredEvent)} listener: {ex.Message}\n{ex.StackTrace}");
+                }
             }
         }
 
@@ -184,10 +245,13 @@ namespace Mantega.Core.Reactive
         /// other operations are performed concurrently.</remarks>
         public void Reset()
         {
-            _hasFired = false;
-            _value = default;
-            _listeners = null;
-            _wrapperMap = null;
+            lock (_lock)
+            {
+                _hasFired = false;
+                _value = default;
+                _listeners = null;
+                _wrapperMap = null;
+            }
         }
     }
 
