@@ -14,8 +14,13 @@ namespace Mantega.Core.Lifecycle
         public IReadOnlySyncable<LifecyclePhase> SyncableStatus => _status;
         public LifecyclePhase Status => _status;
 
-        private DeferredEvent _initialized = new();
+        private readonly DeferredEvent _initialized = new();
         public IReadOnlyDeferredEvent Initialized => _initialized;
+
+        private void Awake()
+        {
+            Initialized.
+        }
 
         #region Initialization
 

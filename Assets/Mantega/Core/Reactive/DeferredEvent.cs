@@ -1,9 +1,161 @@
 namespace Mantega.Core.Reactive
 {
     using System;
-    using System.Collections.Generic;
 
     using Mantega.Core.Diagnostics;
+
+    /// <summary>
+    /// Represents a <see cref="DeferredEvent{T}"/> that can be fired without providing additional event data.
+    /// </summary>
+    /// <remarks>Use this class when you need to signal an event occurrence without passing any payload to
+    /// event handlers. This is a specialization of <see cref="DeferredEvent{Unit}"/> for scenarios where only the event notification
+    /// is required.</remarks>
+    public class DeferredEvent : IReadOnlyDeferredEvent
+    {
+        #region HasFired
+        /// <summary>
+        /// Indicates whether the event has been fired.
+        /// </summary>
+        protected bool _hasFired;
+
+        public bool HasFired
+        {
+            get { lock (_lock) return _hasFired; }
+        }
+        #endregion
+
+        /// <summary>
+        /// Internal list of listeners to be invoked when the event is fired.
+        /// </summary>
+        protected Action _voidListeners;
+
+        /// <summary>
+        /// Serves as a lock object to synchronize access to the internal state of the <see cref="DeferredEvent{T}"/>.
+        /// </summary>
+        /// <remarks>This ensures thread safety for operations that modify or read the state.</remarks>
+        protected readonly object _lock = new();
+
+        /// <inheritdoc />
+        public virtual IReadOnlyDeferredEvent Then(Action callback)
+        {
+            Validations.ValidateNotNull(callback);
+
+            bool fireImmediately = false;
+
+            lock (_lock)
+            {
+                if (_hasFired)
+                {
+                    fireImmediately = true;
+                }
+                else
+                {
+                    _voidListeners += callback;
+                }
+            }
+
+            if (fireImmediately)
+            {
+                callback.Invoke();
+            }
+
+            return this;
+        }
+
+        /// <inheritdoc />
+        public void Remove(Action callback)
+        {
+            Validations.ValidateNotNull(callback);
+            lock (_lock)
+            {
+                if (_voidListeners == null) return;
+                _voidListeners -= callback;
+            }
+        }
+
+        /// <summary>
+        /// Invokes all registered listeners with the specified value, if this method has not already been called.
+        /// </summary>
+        /// <remarks>This method has no effect if called more than once; only the first invocation will
+        /// notify listeners. After firing, all listeners are cleared and will not be invoked again.</remarks>
+        public virtual void Fire()
+        {
+            Action toInvoke = null;
+
+            lock (_lock)
+            {
+                if (_hasFired)
+                {
+                    Log.Warning($"Attempted to fire {nameof(DeferredEvent)} more than once.");
+                    return;
+                }
+
+                _hasFired = true;
+
+                // Snapshot e Limpeza
+                toInvoke = _voidListeners;
+                _voidListeners = null;
+            }
+
+            if (toInvoke == null) return;
+
+            // Execução segura fora do lock
+            SafeInvoke(toInvoke);
+        }
+
+        /// <summary>
+        /// Invokes each delegate in the specified action safely, suppressing exceptions thrown by individual listeners.
+        /// </summary>
+        /// <remarks>Exceptions thrown by any delegate in the action are caught and logged, allowing
+        /// remaining delegates to execute.</remarks>
+        /// <param name="toInvoke">The action containing one or more delegates to invoke. If <see langword="null"/>, no operation is performed.</param>
+        protected static void SafeInvoke(Action toInvoke)
+        {
+            if (toInvoke == null) return;
+            foreach (Delegate handler in toInvoke.GetInvocationList())
+            {
+                try
+                {
+                    ((Action)handler).Invoke();
+                }
+                catch (Exception ex)
+                {
+                    SafeInvokeError(ex);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Logs an error that occurred during listener execution using the provided exception.
+        /// </summary>
+        /// <remarks>This method is intended for internal use to ensure errors are consistently logged. It
+        /// does not throw exceptions and should be used when handling listener failures.</remarks>
+        /// <param name="ex">The exception containing details about the error to be logged. Cannot be <see langword="null"/>.</param>
+        protected static void SafeInvokeError(Exception ex)
+        {
+            if(ex == null)
+            {
+                Log.Error("Listener send a null exception.");
+                return;
+            }
+
+            Log.Error($"Error in listener: {ex.Message}\n{ex.StackTrace}");
+        }
+
+        /// <summary>
+        /// Resets the internal state of the object to its initial values.
+        /// </summary>
+        /// <remarks>Call this method to clear any stored value and remove all listeners. After calling
+        /// <c>Reset</c>, the object behaves as if it was newly created.</remarks>
+        public virtual void Reset()
+        {
+            lock (_lock)
+            {
+                _hasFired = false;
+                _voidListeners = null;
+            }
+        }
+    }
 
     /// <summary>
     /// Represents an event that can be fired once with a value of type <typeparamref name="T"/> and allows listeners to be registered before or after firing.
@@ -19,20 +171,8 @@ namespace Mantega.Core.Reactive
     /// to support concurrent access from multiple threads.
     /// </para></remarks>
     /// <typeparam name="T">The type of value associated with the event when it is fired.</typeparam>
-    public class DeferredEvent<T> : IReadOnlyDeferredEvent<T>
+    public class DeferredEvent<T> : DeferredEvent, IReadOnlyDeferredEvent<T>
     {
-        #region HasFired
-        /// <summary>
-        /// Indicates whether the event has been fired.
-        /// </summary>
-        private bool _hasFired;
-
-        public bool HasFired
-        { 
-            get { lock (_lock) return _hasFired; } 
-        }
-        #endregion
-
         #region Value
         /// <summary>
         /// Indicates the value with which the event was fired.
@@ -47,29 +187,23 @@ namespace Mantega.Core.Reactive
 
         #region Listeners
         /// <summary>
-        /// Internal list of listeners to be invoked when the event is fired.
+        /// Internal list of typed listeners to be invoked when the event is fired.
         /// </summary>
-        private Action<T> _listeners;
+        private Action<T> _typedListeners;
         #endregion
-
-        #region WrapperMap
-        /// <summary>
-        /// Internal mapping of original callbacks to their wrapped counterparts for removal purposes.
-        /// </summary>
-        private Dictionary<Action, List<Action<T>>> _wrapperMap;
-        #endregion
-
-        /// <summary>
-        /// Serves as a lock object to synchronize access to the internal state of the <see cref="DeferredEvent{T}"/>.
-        /// </summary>
-        /// <remarks>This ensures thread safety for operations that modify or read the state.</remarks>
-        private readonly object _lock = new();
 
         /// <remarks>If the result is already available when this method is called, the callback is
         /// invoked immediately. Otherwise, the callback is invoked once the result becomes available. Multiple
         /// callbacks may be registered and will be invoked in the order they were added.</remarks>
         /// <inheritdoc />
-        public IReadOnlyDeferredEvent<T> Then(Action<T> callback)
+        public new virtual IReadOnlyDeferredEvent<T> Then(Action callback)
+        {
+            base.Then(callback);
+            return this;
+        }
+
+        /// <inheritdoc cref="Then(Action)"/>
+        public virtual IReadOnlyDeferredEvent<T> Then(Action<T> callback)
         {
             Validations.ValidateNotNull(callback);
 
@@ -85,11 +219,10 @@ namespace Mantega.Core.Reactive
                 }
                 else
                 {
-                    _listeners += callback;
+                    _typedListeners += callback;
                 }
             }
 
-            // Avoid invoking the callback while holding the lock to prevent potential deadlocks or performance issues if the callback is long-running.
             if (fireImmediately)
             {
                 callback.Invoke(capturedValue);
@@ -98,138 +231,62 @@ namespace Mantega.Core.Reactive
             return this;
         }
 
-        /// <remarks>
-        /// This method wraps the provided <paramref name="callback"/> in an internal adapter. If the result is already available when this method is called, the callback is
-        /// invoked immediately. Otherwise, the callback is invoked once the result becomes available.
-        /// <para>
-        /// <b>Performance Note:</b> This method incurs higher memory allocation overhead than <see cref="Then(Action{T})"/> 
-        /// because it requires internal dictionary tracking to map the original callback to its wrapper. 
-        /// Prefer using <see cref="Then(Action{T})"/> in performance-critical code paths to avoid this extra allocation.
-        /// </para>
-        /// </remarks>
-        /// <inheritdoc />
-        public IReadOnlyDeferredEvent<T> Then(Action callback)
-        {
-            Validations.ValidateNotNull(callback);
-
-            bool fireImmediately = false;
-            Action<T> wrapper = null;
-
-            lock (_lock)
-            {
-                if (_hasFired)
-                {
-                    fireImmediately = true;
-                }
-                else
-                {
-                    _wrapperMap ??= new();
-
-                    wrapper = (_ => callback());
-
-                    if (!_wrapperMap.TryGetValue(callback, out List<Action<T>> wrapperList))
-                    {
-                        wrapperList = new List<Action<T>>();
-                        _wrapperMap.Add(callback, wrapperList);
-                    }
-                    wrapperList.Add(wrapper);
-                }
-            }
-
-            // Avoid invoking the callback while holding the lock to prevent potential deadlocks or performance issues if the callback is long-running.
-            if (fireImmediately)
-            {
-                callback.Invoke();
-                return this;
-            }
-
-            return Then(wrapper);
-        }
-
-
-        /// <remarks>
-        /// This method effectively unsubscribes the listener. 
-        /// </remarks>
-        /// <inheritdoc />
+        /// <inheritdoc cref="DeferredEvent.Remove"/>
         public void Remove(Action<T> callback)
         {
             Validations.ValidateNotNull(callback);
 
             lock (_lock)
             {
-                if (_listeners == null) return;
-                _listeners -= callback;
+                if (_typedListeners == null) return;
+                _typedListeners -= callback;
             }
         }
 
         /// <remarks>
-        /// This method performs a dictionary lookup to find the internal wrapper associated with the provided <paramref name="callback"/>.
+        /// This method has no effect if called more than once; only the first invocation will notify listeners. 
+        /// After firing, all listeners are cleared and will not be invoked again.
         /// <para>
-        /// <b>Multiple Registrations:</b> If the specific <paramref name="callback"/> was registered multiple times, 
-        /// this method removes the <b>most recently added</b> instance (LIFO behavior). You must call <c>Remove</c> once 
-        /// for each time you called <c>Then</c> to completely unsubscribe.
+        /// <b>Execution Order:</b> Typed listeners registered via <see cref="Then(Action{T})"/> are invoked <b>first</b>, 
+        /// followed by parameterless listeners registered via <see cref="Then(Action)"/>. 
+        /// Consequently, the invocation order might not strictly follow the registration order if mixed listener types are used.
         /// </para>
         /// </remarks>
-        /// <inheritdoc />
-        public void Remove(Action callback)
-        {
-            Validations.ValidateNotNull(callback);
-
-            lock (_lock)
-            {
-                if (_listeners == null || _wrapperMap == null) return;
-                if (_wrapperMap.TryGetValue(callback, out List<Action<T>> wrapperList))
-                {
-                    if (wrapperList.Count > 0)
-                    {
-                        // Last wrapper is the most recently added
-                        int lastIndex = wrapperList.Count - 1;
-                        Action<T> wrapperToRemove = wrapperList[lastIndex];
-
-                        _listeners -= wrapperToRemove;
-                        wrapperList.RemoveAt(lastIndex);
-
-                        // Empty wrapper list means no more wrappers for this callback
-                        if (wrapperList.Count == 0)
-                        {
-                            _wrapperMap.Remove(callback);
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Invokes all registered listeners with the specified value, if this method has not already been called.
-        /// </summary>
-        /// <remarks>This method has no effect if called more than once; only the first invocation will
-        /// notify listeners. After firing, all listeners are cleared and will not be invoked again.</remarks>
         /// <param name="value">The value to pass to each registered listener.</param>
-        public void Fire(T value)
+        /// <inheritdoc cref="DeferredEvent.Fire"/>
+        public virtual void Fire(T value)
         {
-            Action<T> toInvoke = null;
+            Action<T> typedToInvoke = null;
+            Action voidToInvoke = null;
 
             lock (_lock)
             {
                 if (_hasFired)
                 {
-                    Log.Warning($"Attempted to fire {nameof(DeferredEvent)} more than once.");
+                    Log.Warning($"Attempted to fire {nameof(DeferredEvent<T>)} more than once.");
                     return;
                 }
 
                 _hasFired = true;
                 _value = value;
 
-                toInvoke = _listeners;
-                _listeners = null;
-                _wrapperMap = null;
+                typedToInvoke = _typedListeners;
+                voidToInvoke = _voidListeners;
+
+                _typedListeners = null;
+                _voidListeners = null;
             }
 
+            SafeInvoke(typedToInvoke, value);
+            SafeInvoke(voidToInvoke);
+        }
+
+        /// <param name="value">The value to pass to each registered listener.</param>
+        /// <inheritdoc cref="DeferredEvent.SafeInvoke(Action)"/>
+        protected static void SafeInvoke(Action<T> toInvoke, T value)
+        {
             if (toInvoke == null) return;
-
-            Delegate[] invocationList = toInvoke.GetInvocationList();
-
-            foreach (Delegate handler in invocationList)
+            foreach (Delegate handler in toInvoke.GetInvocationList())
             {
                 try
                 {
@@ -237,48 +294,20 @@ namespace Mantega.Core.Reactive
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"Error in {nameof(DeferredEvent)} listener: {ex.Message}\n{ex.StackTrace}");
+                    SafeInvokeError(ex);
                 }
             }
         }
 
-        /// <summary>
-        /// Resets the internal state of the object to its initial values.
-        /// </summary>
-        /// <remarks>Call this method to clear any stored value and remove all listeners. After calling
-        /// <c>Reset</c>, the object behaves as if it was newly created.</remarks>
-        public void Reset()
+        /// <inheritdoc />
+        public override void Reset()
         {
             lock (_lock)
             {
-                _hasFired = false;
+                base.Reset();
                 _value = default;
-                _listeners = null;
-                _wrapperMap = null;
+                _typedListeners = null;
             }
-        }
-    }
-
-    /// <summary>
-    /// Represents a <see cref="DeferredEvent{T}"/> that can be fired without providing additional event data.
-    /// </summary>
-    /// <remarks>Use this class when you need to signal an event occurrence without passing any payload to
-    /// event handlers. This is a specialization of <see cref="DeferredEvent{Unit}"/> for scenarios where only the event notification
-    /// is required.</remarks>
-    public class DeferredEvent : DeferredEvent<Unit>, IReadOnlyDeferredEvent
-    {
-        /// <summary>
-        /// Invokes all registered listeners, if this method has not already been called.
-        /// </summary>
-        /// <remarks>This method is a convenience overload for firing the event when no additional
-        /// information needs to be provided to event handlers. It is equivalent to calling the base Fire method with a
-        /// default unit value.</remarks>
-        public void Fire() => base.Fire(Unit.Default);
-
-        public new IReadOnlyDeferredEvent Then(Action callback)
-        {
-            base.Then(callback);
-            return this;
         }
     }
 }
