@@ -8,11 +8,16 @@ namespace Mantega.Core.Reactive
     /// <summary>
     /// Represents an event that can be fired once with a value of type <typeparamref name="T"/> and allows listeners to be registered before or after firing.
     /// </summary>
-    /// <remarks>DeferredEvent<T> enables deferred notification of a value to registered listeners. Callbacks
+    /// <remarks>It enables deferred notification of a value to registered listeners. Callbacks
     /// registered before the event is fired are invoked when Fire is called; callbacks registered after firing are
-    /// invoked immediately. The event can only be fired once, and subsequent calls to Fire are ignored. Use Reset to
-    /// clear the state and allow reuse of the object. This class is not thread-safe; synchronize access if used in
-    /// multithreaded scenarios.</remarks>
+    /// invoked immediately. The event can only be fired once, and subsequent calls to Fire are ignored.
+    /// <para>
+    /// Use <see cref="Reset"/> to clear the state and allow reuse of the object.
+    /// </para>
+    /// <para>
+    /// <b>Thread Safety:</b> This class is fully thread-safe. All public members utilize internal synchronization 
+    /// to support concurrent access from multiple threads.
+    /// </para></remarks>
     /// <typeparam name="T">The type of value associated with the event when it is fired.</typeparam>
     public class DeferredEvent<T> : IReadOnlyDeferredEvent<T>
     {
@@ -63,7 +68,7 @@ namespace Mantega.Core.Reactive
         /// <remarks>If the result is already available when this method is called, the callback is
         /// invoked immediately. Otherwise, the callback is invoked once the result becomes available. Multiple
         /// callbacks may be registered and will be invoked in the order they were added.</remarks>
-        /// <inheritdoc cref="IReadOnlyDeferredEvent{T}.Then(Action{T})"/>
+        /// <inheritdoc />
         public IReadOnlyDeferredEvent<T> Then(Action<T> callback)
         {
             Validations.ValidateNotNull(callback);
@@ -102,7 +107,7 @@ namespace Mantega.Core.Reactive
         /// Prefer using <see cref="Then(Action{T})"/> in performance-critical code paths to avoid this extra allocation.
         /// </para>
         /// </remarks>
-        /// <inheritdoc cref="Then(Action{T})"/>/>
+        /// <inheritdoc />
         public IReadOnlyDeferredEvent<T> Then(Action callback)
         {
             Validations.ValidateNotNull(callback);
@@ -145,7 +150,7 @@ namespace Mantega.Core.Reactive
         /// <remarks>
         /// This method effectively unsubscribes the listener. 
         /// </remarks>
-        /// <inheritdoc cref="Remove(Action{T})"/>/>
+        /// <inheritdoc />
         public void Remove(Action<T> callback)
         {
             Validations.ValidateNotNull(callback);
@@ -165,7 +170,7 @@ namespace Mantega.Core.Reactive
         /// for each time you called <c>Then</c> to completely unsubscribe.
         /// </para>
         /// </remarks>
-        /// <inheritdoc cref="Remove(Action{T})"/>
+        /// <inheritdoc />
         public void Remove(Action callback)
         {
             Validations.ValidateNotNull(callback);
@@ -177,14 +182,14 @@ namespace Mantega.Core.Reactive
                 {
                     if (wrapperList.Count > 0)
                     {
-                        // Last wrapper is the most recently added.
+                        // Last wrapper is the most recently added
                         int lastIndex = wrapperList.Count - 1;
                         Action<T> wrapperToRemove = wrapperList[lastIndex];
 
                         _listeners -= wrapperToRemove;
                         wrapperList.RemoveAt(lastIndex);
 
-                        // Empty wrapper list means no more wrappers for this callback.
+                        // Empty wrapper list means no more wrappers for this callback
                         if (wrapperList.Count == 0)
                         {
                             _wrapperMap.Remove(callback);
@@ -241,8 +246,7 @@ namespace Mantega.Core.Reactive
         /// Resets the internal state of the object to its initial values.
         /// </summary>
         /// <remarks>Call this method to clear any stored value and remove all listeners. After calling
-        /// <c>Reset</c>, the object behaves as if it was newly created. This method is not thread-safe; ensure that no
-        /// other operations are performed concurrently.</remarks>
+        /// <c>Reset</c>, the object behaves as if it was newly created.</remarks>
         public void Reset()
         {
             lock (_lock)
@@ -256,10 +260,10 @@ namespace Mantega.Core.Reactive
     }
 
     /// <summary>
-    /// Represents a deferred event that can be fired without providing additional event data.
+    /// Represents a <see cref="DeferredEvent{T}"/> that can be fired without providing additional event data.
     /// </summary>
     /// <remarks>Use this class when you need to signal an event occurrence without passing any payload to
-    /// event handlers. This is a specialization of DeferredEvent<Unit> for scenarios where only the event notification
+    /// event handlers. This is a specialization of <see cref="DeferredEvent{Unit}"/> for scenarios where only the event notification
     /// is required.</remarks>
     public class DeferredEvent : DeferredEvent<Unit>
     {
