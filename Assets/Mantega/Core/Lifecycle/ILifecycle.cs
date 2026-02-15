@@ -6,7 +6,7 @@ namespace Mantega.Core.Lifecycle
         {
             Uninitialized,
             Uninitializing,
-            Resetting, 
+            Restarting, 
             Initializing, 
             Initialized,
             Faulted,
@@ -14,7 +14,7 @@ namespace Mantega.Core.Lifecycle
         }
         public LifecyclePhase Status { get; }
         public void Initialize();
-        public void Reset();
+        public void Restart();
         public void Uninitialize();
     }
 }

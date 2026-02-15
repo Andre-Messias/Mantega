@@ -5,11 +5,10 @@ namespace Mantega.Core.Reactive
     using Mantega.Core.Diagnostics;
 
     /// <summary>
-    /// Represents a <see cref="DeferredEvent{T}"/> that can be fired without providing additional event data.
+    /// Represents an event that can be fired once and allows listeners to be registered before or after firing.
     /// </summary>
-    /// <remarks>Use this class when you need to signal an event occurrence without passing any payload to
-    /// event handlers. This is a specialization of <see cref="DeferredEvent{Unit}"/> for scenarios where only the event notification
-    /// is required.</remarks>
+    /// <remarks><b>Thread Safety:</b> This class is fully thread-safe. All public members utilize internal synchronization 
+    /// to support concurrent access from multiple threads.</remarks> 
     public class DeferredEvent : IReadOnlyDeferredEvent
     {
         #region HasFired

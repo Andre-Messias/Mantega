@@ -10,14 +10,13 @@ namespace Mantega.Core.Lifecycle
     [Serializable]
     public abstract class LifecycleBehaviour : MonoBehaviour, ILifecycle
     {
+        [Header("Lifecycle")]
         [SerializeField] protected Syncable<LifecyclePhase> _status = new(LifecyclePhase.Uninitialized);
         public IReadOnlySyncable<LifecyclePhase> SyncableStatus => _status;
         public LifecyclePhase Status => _status;
 
         private readonly DeferredEvent _initialized = new();
         public IReadOnlyDeferredEvent Initialized => _initialized;
-
-        
 
         #region Initialization
 
@@ -35,6 +34,7 @@ namespace Mantega.Core.Lifecycle
             {
                 OnInitialize();
                 _status.Value = LifecyclePhase.Initialized;
+                _initialized.Fire();
             }
             catch (System.Exception ex)
             {
@@ -56,39 +56,39 @@ namespace Mantega.Core.Lifecycle
         }
         #endregion
 
-        #region Resetting
-        public void Reset()
+        #region Restarting
+        public void Restart()
         {
             LifecyclePhase status = _status;
-            if (!CanReset(status))
+            if (!CanRestart(status))
             {
                 Log.Warning($"Cannot reset while in status {status}.", this);
                 return;
             }
     
-            _status.Value = LifecyclePhase.Resetting;
+            _status.Value = LifecyclePhase.Restarting;
             try
             {
-                OnReset();
+                OnRestart();
                 _status.Value = LifecyclePhase.Uninitialized;
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Log.Error($"Resetting failed with exception: {ex}", this);
                 _status.Value = LifecyclePhase.Faulted;
             }
         }
 
-        protected virtual void OnReset() { }
+        protected virtual void OnRestart() { }
 
-        protected virtual bool CanReset(LifecyclePhase status)
+        protected virtual bool CanRestart(LifecyclePhase status)
         {
             return status == LifecyclePhase.Initialized || status == LifecyclePhase.Uninitialized || status == LifecyclePhase.Faulted;
         }
 
-        public bool CanReset()
+        public bool CanRestart()
         {
-            return CanReset(_status);
+            return CanRestart(_status);
         }
         #endregion
 
