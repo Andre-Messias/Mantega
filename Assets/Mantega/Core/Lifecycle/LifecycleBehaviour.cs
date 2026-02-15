@@ -36,7 +36,7 @@ namespace Mantega.Core.Lifecycle
                 _status.Value = LifecyclePhase.Initialized;
                 _initialized.Fire();
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Log.Error($"Initialization failed with exception: {ex}", this);
                 _status.Value = LifecyclePhase.Faulted;
