@@ -11,6 +11,12 @@ namespace Mantega.Core.Editor
     [CustomPropertyDrawer(typeof(CallOnChangeAttribute))]
     public class CallOnChangeDrawer : PropertyDrawer
     {
+        /// <summary>
+        /// Draws the property in the Unity Editor and invokes the specified method when the property value changes.
+        /// </summary>
+        /// <param name="position">The position on the screen to draw the property field.</param>
+        /// <param name="property">The <see cref="SerializedProperty"/> being drawn.</param>
+        /// <param name="label">Represents the label to display alongside the property field in the Unity Editor.</param>
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             object targetObject = GetParentObject(property);
@@ -29,62 +35,102 @@ namespace Mantega.Core.Editor
             {
                 // Get the attribute
                 CallOnChangeAttribute callOnChangeAttribute = attribute as CallOnChangeAttribute;
-
                 property.serializedObject.ApplyModifiedProperties();
+
                 // Get the current (new) value
                 object newValue = fieldInfo.GetValue(targetObject);
 
                 // Get the target object the property belongs to
-                var targetType = targetObject.GetType();
+                var currentType = targetObject.GetType();
 
                 // Find the method with the specified name
-                MethodInfo method = targetType.GetMethod(callOnChangeAttribute.MethodName,
-                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                MethodInfo method = null;
+
+                while (currentType != null && method == null)
+                {
+                    method = currentType.GetMethod(callOnChangeAttribute.MethodName,
+                        BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+                    // Method not found in the current type
+                    if (method == null)
+                    {
+                        currentType = currentType.BaseType;
+                    }
+                }
 
                 if (method != null)
                 {
                     var parameters = method.GetParameters();
-                    if (parameters.Length == 2)
+
+                    object arg1 = oldValue;
+                    object arg2 = newValue;
+
+                    if (oldValue is IValueContainer oldContainer)
                     {
-                        // Call the method
-                        method.Invoke(targetObject, new[] { oldValue, newValue });
+                        // If the method expects a parameter that is not the same type as the old value, try to get the value from the container
+                        if (parameters.Length > 0 && !parameters[0].ParameterType.IsInstanceOfType(oldValue))
+                        {
+                            arg1 = oldContainer.GetValue();
+                        }
                     }
-                    else if (parameters.Length == 0)
+
+                    if (newValue is IValueContainer newContainer)
                     {
-                        method.Invoke(targetObject, null);
+                        // If the method expects a parameter that is not the same type as the new value, try to get the value from the container
+                        if (parameters.Length > 1 && !parameters[1].ParameterType.IsInstanceOfType(newValue))
+                        {
+                            arg2 = newContainer.GetValue();
+                        }
+                        // If the method expects only one parameter and it's not the same type as the new value, try to get the value from the container
+                        else if (parameters.Length == 1 && !parameters[0].ParameterType.IsInstanceOfType(newValue))
+                        {
+                            arg2 = newContainer.GetValue();
+                        }
                     }
-                    else
+
+                    switch(parameters.Length)
                     {
-                        Debug.LogError($"[CallOnChange] Method '{callOnChangeAttribute.MethodName}' in '{targetType.Name}' must have either 0 or 2 parameters (old value and new value).");
+                        case 0:
+                            method.Invoke(targetObject, null);
+                            break;
+                        case 1:
+                            method.Invoke(targetObject, new[] { arg2 });
+                            break;
+                        case 2:
+                            method.Invoke(targetObject, new[] { arg1, arg2 });
+                            break;
+                        default:
+                            Debug.LogError($"[CallOnChange] Method '{callOnChangeAttribute.MethodName}' in '{currentType.Name}' must have either 0, 1 or 2 parameters (old value and/or new value).");
+                            break;
                     }
                 }
                 else
                 {
-                    Debug.LogWarning($"[CallOnChange] Method '{callOnChangeAttribute.MethodName}' not found in '{targetType.Name}'");
+                    Debug.LogWarning($"[CallOnChange] Method '{callOnChangeAttribute.MethodName}' not found in '{currentType.Name}'");
                 }
             }
         }
 
         /// <summary>
-        /// Calculates the height, in pixels, required to render the specified property in the Unity Editor
+        /// Calculates the height, in pixels, required to render the specified property in the Unity Editor.
         /// </summary>
-        /// <param name="property">The <see cref="SerializedProperty"/> to calculate the height for</param>
-        /// <param name="label">The label to display alongside the property in the Unity Editor</param>
-        /// <returns>The height, in pixels, required to render the property, including any child properties if applicable</returns>
+        /// <param name="property">The <see cref="SerializedProperty"/> to calculate the height for.</param>
+        /// <param name="label">The label to display alongside the property in the Unity Editor.</param>
+        /// <returns>The height, in pixels, required to render the property, including any child properties if applicable.</returns>
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             return EditorGUI.GetPropertyHeight(property, label, true);
         }
 
         /// <summary>
-        /// Retrieves the parent object of the specified serialized property
+        /// Retrieves the parent object of the specified serialized property.
         /// </summary>
         /// <remarks>This method traverses the property path of the given <see
         /// cref="SerializedProperty"/> to locate its parent object. It uses reflection to access fields, including
-        /// private and public fields, along the property path</remarks>
-        /// <param name="property">The <see cref="SerializedProperty"/> for which the parent object is to be retrieved</param>
+        /// private and public fields, along the property path.</remarks>
+        /// <param name="property">The <see cref="SerializedProperty"/> for which the parent object is to be retrieved.</param>
         /// <returns>The parent object of the specified serialized property, or <see langword="null"/> if the parent object
-        /// cannot be determined</returns>
+        /// cannot be determined.</returns>
         private static object GetParentObject(SerializedProperty property)
         {
             object obj = property.serializedObject.targetObject;

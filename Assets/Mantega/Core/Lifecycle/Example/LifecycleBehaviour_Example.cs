@@ -8,5 +8,6 @@ namespace Mantega.Core.Lifecycle.Example
     public class LifecycleBehaviour_Example : LifecycleBehaviour
     {
         [SerializeField] private Syncable<ControlledInt> _controlledInt;
+
     }
 }

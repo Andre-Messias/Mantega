@@ -128,6 +128,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1044030851}
+  - component: {fileID: 1044030852}
   m_Layer: 0
   m_Name: Lifecycle_Example
   m_TagString: Untagged
@@ -150,6 +151,26 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1044030852
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1044030850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1416dcb4466eb5048a93c1b6799db7bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Mantega.Core.Lifecycle.Example.LifecycleBehaviour_Example
+  _status:
+    _value: 0
+  _autoInitializeOption: 1
+  _controlledInt:
+    _value:
+      _value: 0
+      _max: 23
+      _min: 0
 --- !u!1 &1547627874
 GameObject:
   m_ObjectHideFlags: 0

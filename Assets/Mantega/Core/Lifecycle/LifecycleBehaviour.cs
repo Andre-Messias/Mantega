@@ -7,19 +7,70 @@ namespace Mantega.Core.Lifecycle
     using LifecyclePhase = ILifecycle.LifecyclePhase;
     using System;
 
+#if UNITY_EDITOR
+    using UnityEditor;
+    using Editor;
+#endif
+
     [Serializable]
     public abstract class LifecycleBehaviour : MonoBehaviour, ILifecycle
     {
+        enum AutoInitializeOption
+        {
+            None,
+            InitializeOnAwake,
+            InitializeOnStart
+        }
+
+        #region Status
         [Header("Lifecycle")]
+#if UNITY_EDITOR
+        [CallOnChange(nameof(EditorTryResetInitializedEvent))]
+#endif
         [SerializeField] protected Syncable<LifecyclePhase> _status = new(LifecyclePhase.Uninitialized);
         public IReadOnlySyncable<LifecyclePhase> SyncableStatus => _status;
         public LifecyclePhase Status => _status;
+        #endregion
+
+        [SerializeField] private AutoInitializeOption _autoInitializeOption = AutoInitializeOption.None;
 
         private readonly DeferredEvent _initialized = new();
         public IReadOnlyDeferredEvent Initialized => _initialized;
 
-        #region Initialization
 
+        #region Auto Initialization
+        protected void Awake()
+        {
+            _status.OnValueChanged += HandleStatusChanged;
+            if (_autoInitializeOption == AutoInitializeOption.InitializeOnAwake && CanInitialize())
+            {
+                Initialize();
+            }
+
+            OnAwake();
+        }
+
+        private void HandleStatusChanged(LifecyclePhase oldPhase, LifecyclePhase newPhase)
+        {
+            TryResetInitializedEvent(newPhase);
+        }
+
+        protected virtual void OnAwake() { }
+
+        protected void Start()
+        {
+            if (_autoInitializeOption == AutoInitializeOption.InitializeOnStart && CanInitialize())
+            {
+                Initialize();
+            }
+
+            OnStart();
+        }
+
+        protected virtual void OnStart() { }
+        #endregion
+
+        #region Initialization
         public void Initialize()
         {
             LifecyclePhase status = _status;
@@ -70,6 +121,7 @@ namespace Mantega.Core.Lifecycle
             try
             {
                 OnRestart();
+                _initialized.Reset();
                 _status.Value = LifecyclePhase.Uninitialized;
             }
             catch (Exception ex)
@@ -106,6 +158,7 @@ namespace Mantega.Core.Lifecycle
             try
             {
                 OnUninitialize();
+                _initialized.Reset();
                 _status.Value = LifecyclePhase.Uninitialized;
             }
             catch (System.Exception ex)
@@ -142,6 +195,7 @@ namespace Mantega.Core.Lifecycle
             try
             { 
                 OnFixFault();
+                _initialized.Reset();
                 _status.Value = LifecyclePhase.Uninitialized;
             }
             catch (System.Exception ex)
@@ -163,6 +217,79 @@ namespace Mantega.Core.Lifecycle
             return CanFixFault(_status);
         }
         #endregion
-    
+        
+        private bool TryResetInitializedEvent(LifecyclePhase lifecyclePhase)
+        {
+            if (CanResetInitializedEvent(lifecyclePhase))
+            {
+                _initialized.Reset();
+                return true;
+            }
+            return false;
+        }
+
+        private bool TryResetInitializedEvent()
+        {
+            return TryResetInitializedEvent(_status);
+        }
+
+        private bool CanResetInitializedEvent(LifecyclePhase lifecyclePhase)
+        {
+            return CanInitialize(lifecyclePhase) && _initialized.HasFired;
+        }
+
+        private bool CanResetInitializedEvent()
+        {
+            return CanResetInitializedEvent(_status);
+        }
+
+#if UNITY_EDITOR
+        private void EditorTryResetInitializedEvent(LifecyclePhase oldPhase, LifecyclePhase newPhase)
+        {
+            TryResetInitializedEvent(newPhase);
+        }
+
+        
+#endif
     }
+#if UNITY_EDITOR
+    [CustomEditor(typeof(LifecycleBehaviour), true)]
+    public class LifecycleBehaviourEditor : Editor
+    {
+        public override void OnInspectorGUI()
+        {
+            base.OnInspectorGUI();
+            LifecycleBehaviour lifecycle = (LifecycleBehaviour)target;
+            GUILayout.Space(25);
+            GUILayout.Label($"Status: {lifecycle.Status}");
+            bool buttonPressed = false;
+            if (lifecycle.CanInitialize() && GUILayout.Button("Initialize"))
+            {
+                lifecycle.Initialize();
+                buttonPressed = true;
+            }
+            if (lifecycle.CanRestart() && GUILayout.Button("Restart"))
+            {
+                lifecycle.Restart();
+                buttonPressed = true;
+            }
+            if (lifecycle.CanUninitialize() && GUILayout.Button("Uninitialize"))
+            {
+                lifecycle.Uninitialize();
+                buttonPressed = true;
+            }
+            if (lifecycle.CanFixFault() && GUILayout.Button("Fix Fault"))
+            {
+                lifecycle.FixFault();
+                buttonPressed = true;
+            }
+
+            // Set gameobject as dirty to ensure changes are saved and reflected in the editor
+            if (buttonPressed)
+            {
+                EditorUtility.SetDirty(lifecycle.gameObject);
+            }
+        }
+    }
+#endif
 }
