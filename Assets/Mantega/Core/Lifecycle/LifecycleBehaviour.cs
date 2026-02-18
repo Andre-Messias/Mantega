@@ -1,3 +1,6 @@
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("Mantega.Core.Editor")]
 namespace Mantega.Core.Lifecycle
 {
     using UnityEngine;
@@ -8,13 +11,38 @@ namespace Mantega.Core.Lifecycle
     using System;
 
 #if UNITY_EDITOR
-    using UnityEditor;
-    using Editor;
+    using Mantega.Core;
 #endif
 
     [Serializable]
     public abstract class LifecycleBehaviour : MonoBehaviour, ILifecycle
     {
+        
+        #region Status
+        /// <summary>
+        /// Represents the current lifecycle phase of the object.
+        /// </summary>
+        /// <remarks>Changes to this field may trigger lifecycle-related events or behaviors, depending on the implementation. </remarks>
+        [Header("Lifecycle")]
+#if UNITY_EDITOR
+        [CallOnChange(nameof(EditorTryResetInitializedEvent))]
+#endif
+        [SerializeField] protected Syncable<LifecyclePhase> _status = new(LifecyclePhase.Uninitialized);
+
+        /// <summary>
+        /// Gets the current lifecycle phase status as a syncable value.
+        /// </summary>
+        public IReadOnlySyncable<LifecyclePhase> SyncableStatus => _status;
+
+        /// <inheritdoc/>
+        public LifecyclePhase Status => _status;
+        #endregion
+
+        #region Auto Initialize Option
+
+        /// <summary>
+        /// Specifies options for automatically initializing the component.
+        /// </summary>
         enum AutoInitializeOption
         {
             None,
@@ -22,17 +50,11 @@ namespace Mantega.Core.Lifecycle
             InitializeOnStart
         }
 
-        #region Status
-        [Header("Lifecycle")]
-#if UNITY_EDITOR
-        [CallOnChange(nameof(EditorTryResetInitializedEvent))]
-#endif
-        [SerializeField] protected Syncable<LifecyclePhase> _status = new(LifecyclePhase.Uninitialized);
-        public IReadOnlySyncable<LifecyclePhase> SyncableStatus => _status;
-        public LifecyclePhase Status => _status;
-        #endregion
-
+        /// <summary>
+        /// Specifies when the component should automatically initialize itself.
+        /// </summary>
         [SerializeField] private AutoInitializeOption _autoInitializeOption = AutoInitializeOption.None;
+        #endregion
 
         private readonly DeferredEvent _initialized = new();
         public IReadOnlyDeferredEvent Initialized => _initialized;
@@ -41,18 +63,12 @@ namespace Mantega.Core.Lifecycle
         #region Auto Initialization
         protected void Awake()
         {
-            _status.OnValueChanged += HandleStatusChanged;
             if (_autoInitializeOption == AutoInitializeOption.InitializeOnAwake && CanInitialize())
             {
                 Initialize();
             }
 
             OnAwake();
-        }
-
-        private void HandleStatusChanged(LifecyclePhase oldPhase, LifecyclePhase newPhase)
-        {
-            TryResetInitializedEvent(newPhase);
         }
 
         protected virtual void OnAwake() { }
@@ -73,25 +89,13 @@ namespace Mantega.Core.Lifecycle
         #region Initialization
         public void Initialize()
         {
-            LifecyclePhase status = _status;
-            if (!CanInitialize(status))
-            {
-                Log.Warning($"Cannot initialize while in status {status}.", this);
-                return;
-            }
-
-            _status.Value = LifecyclePhase.Initializing;
-            try
-            {
-                OnInitialize();
-                _status.Value = LifecyclePhase.Initialized;
-                _initialized.Fire();
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"Initialization failed with exception: {ex}", this);
-                _status.Value = LifecyclePhase.Faulted;
-            }
+            ExecuteLifecycleTransition(
+                CanInitialize,
+                LifecyclePhase.Initializing,
+                OnInitialize,
+                LifecyclePhase.Initialized,
+                "Initialization"
+            );
         }
 
         protected virtual void OnInitialize() { }
@@ -110,25 +114,13 @@ namespace Mantega.Core.Lifecycle
         #region Restarting
         public void Restart()
         {
-            LifecyclePhase status = _status;
-            if (!CanRestart(status))
-            {
-                Log.Warning($"Cannot reset while in status {status}.", this);
-                return;
-            }
-    
-            _status.Value = LifecyclePhase.Restarting;
-            try
-            {
-                OnRestart();
-                _initialized.Reset();
-                _status.Value = LifecyclePhase.Uninitialized;
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"Resetting failed with exception: {ex}", this);
-                _status.Value = LifecyclePhase.Faulted;
-            }
+            ExecuteLifecycleTransition(
+                CanRestart,
+                LifecyclePhase.Restarting,
+                OnRestart,
+                LifecyclePhase.Uninitialized,
+                "Restarting"
+            );
         }
 
         protected virtual void OnRestart() { }
@@ -145,27 +137,15 @@ namespace Mantega.Core.Lifecycle
         #endregion
 
         #region Uninitialization
-        public void Uninitialize() 
+        public void Uninitialize()
         {
-            LifecyclePhase status = _status;
-            if (!CanUninitialize(status))
-            {
-                Log.Warning($"Cannot uninitialize while in status {status}.", this);
-                return;
-            }
-
-            _status.Value = LifecyclePhase.Uninitializing;
-            try
-            {
-                OnUninitialize();
-                _initialized.Reset();
-                _status.Value = LifecyclePhase.Uninitialized;
-            }
-            catch (System.Exception ex)
-            {
-                Log.Error($"Uninitialization failed with exception: {ex}", this);
-                _status.Value = LifecyclePhase.Faulted;
-            }
+            ExecuteLifecycleTransition(
+                CanUninitialize,
+                LifecyclePhase.Uninitializing,
+                OnUninitialize,
+                LifecyclePhase.Uninitialized,
+                "Uninitializing"
+            );
         }
 
         protected virtual void OnUninitialize() { }
@@ -184,25 +164,13 @@ namespace Mantega.Core.Lifecycle
         #region Fault Fixing
         public void FixFault()
         {
-            LifecyclePhase status = _status;
-            if (!CanFixFault(status))
-            {
-                Log.Warning($"Cannot fix fault while in status {status}.", this);
-                return;
-            }
-
-            _status.Value = LifecyclePhase.Fixing;
-            try
-            { 
-                OnFixFault();
-                _initialized.Reset();
-                _status.Value = LifecyclePhase.Uninitialized;
-            }
-            catch (System.Exception ex)
-            {
-                Log.Error($"Fixing fault failed with exception: {ex}", this);
-                _status.Value = LifecyclePhase.Faulted;
-            }
+            ExecuteLifecycleTransition(
+                CanFixFault,
+                LifecyclePhase.Fixing,
+                OnFixFault,
+                LifecyclePhase.Uninitialized,
+                "Fixing Fault"
+            );
         }
 
         protected virtual void OnFixFault() { }
@@ -217,79 +185,67 @@ namespace Mantega.Core.Lifecycle
             return CanFixFault(_status);
         }
         #endregion
-        
-        private bool TryResetInitializedEvent(LifecyclePhase lifecyclePhase)
+
+        private void ExecuteLifecycleTransition(
+            Func<LifecyclePhase, bool> canExecutePredicate,
+            LifecyclePhase transitionPhase,
+            Action action,
+            LifecyclePhase successPhase,
+            string operationName)
         {
-            if (CanResetInitializedEvent(lifecyclePhase))
+            LifecyclePhase currentStatus = _status;
+
+            // Validate
+            if (!canExecutePredicate(currentStatus))
             {
-                _initialized.Reset();
-                return true;
+                Log.Warning($"Cannot perform '{operationName}' while in status {currentStatus}.", this);
+                return;
             }
-            return false;
+
+            _status.Value = transitionPhase;
+
+            try
+            {
+                action();
+
+                _status.Value = successPhase;
+
+                if (CanResetInitializedEvent(successPhase))
+                {
+                    _initialized.Reset();
+                }
+
+                if(successPhase == LifecyclePhase.Initialized)
+                {
+                    _initialized.Fire();
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"{operationName} failed with exception: {ex}", this);
+                _status.Value = LifecyclePhase.Faulted;
+            }
         }
 
-        private bool TryResetInitializedEvent()
-        {
-            return TryResetInitializedEvent(_status);
-        }
 
         private bool CanResetInitializedEvent(LifecyclePhase lifecyclePhase)
         {
             return CanInitialize(lifecyclePhase) && _initialized.HasFired;
         }
 
-        private bool CanResetInitializedEvent()
-        {
-            return CanResetInitializedEvent(_status);
-        }
-
 #if UNITY_EDITOR
-        private void EditorTryResetInitializedEvent(LifecyclePhase oldPhase, LifecyclePhase newPhase)
+        private void EditorTryResetInitializedEvent(LifecyclePhase phase)
         {
-            TryResetInitializedEvent(newPhase);
+            if (CanResetInitializedEvent(phase))
+            {
+                _initialized.Reset();
+            }
         }
 
-        
+        internal void EditorForceUpdateEventState()
+        {
+            EditorTryResetInitializedEvent(_status);
+        }
 #endif
     }
-#if UNITY_EDITOR
-    [CustomEditor(typeof(LifecycleBehaviour), true)]
-    public class LifecycleBehaviourEditor : Editor
-    {
-        public override void OnInspectorGUI()
-        {
-            base.OnInspectorGUI();
-            LifecycleBehaviour lifecycle = (LifecycleBehaviour)target;
-            GUILayout.Space(25);
-            GUILayout.Label($"Status: {lifecycle.Status}");
-            bool buttonPressed = false;
-            if (lifecycle.CanInitialize() && GUILayout.Button("Initialize"))
-            {
-                lifecycle.Initialize();
-                buttonPressed = true;
-            }
-            if (lifecycle.CanRestart() && GUILayout.Button("Restart"))
-            {
-                lifecycle.Restart();
-                buttonPressed = true;
-            }
-            if (lifecycle.CanUninitialize() && GUILayout.Button("Uninitialize"))
-            {
-                lifecycle.Uninitialize();
-                buttonPressed = true;
-            }
-            if (lifecycle.CanFixFault() && GUILayout.Button("Fix Fault"))
-            {
-                lifecycle.FixFault();
-                buttonPressed = true;
-            }
-
-            // Set gameobject as dirty to ensure changes are saved and reflected in the editor
-            if (buttonPressed)
-            {
-                EditorUtility.SetDirty(lifecycle.gameObject);
-            }
-        }
-    }
-#endif
 }

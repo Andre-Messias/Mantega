@@ -1,6 +1,5 @@
 namespace Mantega.Core.Editor
 {
-#if UNITY_EDITOR
     using UnityEditor;
     using UnityEngine;
 
@@ -26,6 +25,5 @@ namespace Mantega.Core.Editor
         /// Gets the GUI style used for rendering JSON content in the user interface
         /// </summary>
         public static GUIStyle JsonStyle => _jsonStyle;
-    }   
-#endif
+    } 
 }

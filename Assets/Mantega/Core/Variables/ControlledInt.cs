@@ -5,10 +5,6 @@ namespace Mantega.Core.Variables
 
     using Mantega.Core.Reactive;
 
-#if UNITY_EDITOR
-    using Mantega.Core.Editor;
-#endif
-
     /// <summary>
     /// Represents an integer value constrained within a specified range, with support for dynamic range adjustments
     /// and change notifications

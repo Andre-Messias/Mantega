@@ -1,7 +1,7 @@
 namespace Mantega.Core.Diagnostics
 {
-    using System.Runtime.CompilerServices;
     using UnityEngine;
+    using System.Runtime.CompilerServices;
 
     public static class Validations 
     {

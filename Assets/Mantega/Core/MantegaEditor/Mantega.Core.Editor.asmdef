@@ -1,0 +1,18 @@
+{
+    "name": "Mantega.Core.Editor",
+    "rootNamespace": "Mantega.Core.Editor",
+    "references": [
+        "GUID:03e67e4b4d065de4bbdaa8b807ec593d"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

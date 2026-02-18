@@ -6,7 +6,7 @@ namespace Mantega.Drawer
     using Mantega.Geometry;
 
 #if UNITY_EDITOR
-    using Mantega.Core.Editor;
+    using Mantega.Core;
 #endif
 
     /// <summary>

@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 namespace Mantega.Core.Editor
 {
     using System.Reflection;
@@ -150,4 +149,3 @@ namespace Mantega.Core.Editor
         }
     }
 }
-#endif

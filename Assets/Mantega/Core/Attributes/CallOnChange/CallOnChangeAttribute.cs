@@ -1,4 +1,4 @@
-namespace Mantega.Core.Editor
+namespace Mantega.Core
 {
     using System;
     using UnityEngine;
@@ -15,8 +15,9 @@ namespace Mantega.Core.Editor
     /// The method specified by <paramref name="methodName"/> must exist in the same class 
     /// as the decorated field and match one of the following signatures:
     /// <list type="bullet">
-    /// <item><description><b>Two parameters:</b> Accepts the old value and the new value.</description></item>
     /// <item><description><b>No parameters:</b> Simple notification.</description></item>
+    /// <item><description><b>One parameter:</b> Accepts the new value of the field.</description></item>
+    /// <item><description><b>Two parameters:</b> Accepts the old value and the new value.</description></item>
     /// </list>
     /// </para>
     /// </remarks>

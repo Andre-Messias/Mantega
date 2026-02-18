@@ -11,7 +11,6 @@ namespace Mantega.Core.Reactive.Example
 
 #if UNITY_EDITOR
     using UnityEditor;
-    using Mantega.Core.Editor;
 #endif
 
     public class Reactive_Example : MonoBehaviour
@@ -102,19 +101,9 @@ namespace Mantega.Core.Reactive.Example
             _internalChangeSyncable.OnValueChanged -= OnInternalChange;
         }
 
-        private void OnColorChange()
-        {
-            Debug.Log($"Color Syncable Changed: {_colorSyncable.Value}");
-        }
-
         private void OnColorChange(Color oldValue, Color newValue)
         {
             Debug.Log($"Color Syncable Changed: {oldValue} -> {newValue}");
-        }
-
-        private void OnInternalChange()
-        {
-            Debug.Log($"Internal Change Syncable Changed: Value1: {_internalChangeSyncable.Value.Value1}, Value2: {_internalChangeSyncable.Value.Value2}");
         }
 
         private void OnInternalChange(InternalChange_Example oldValue, InternalChange_Example newValue)
@@ -135,6 +124,16 @@ namespace Mantega.Core.Reactive.Example
         }
 
 #if UNITY_EDITOR
+        private void OnColorChange()
+        {
+            Debug.Log($"Color Syncable Changed: {_colorSyncable.Value}");
+        }
+
+        private void OnInternalChange()
+        {
+            Debug.Log($"Internal Change Syncable Changed: Value1: {_internalChangeSyncable.Value.Value1}, Value2: {_internalChangeSyncable.Value.Value2}");
+        }
+
         private void OnEditorChangeColor()
         {
             OnColorChange();
