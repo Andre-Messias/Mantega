@@ -164,11 +164,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Mantega.Core.Lifecycle.Example.LifecycleBehaviour_Example
   _status:
-    _value: 5
+    _value: 0
   _autoInitializeOption: 1
-  _imaginarySimpleFault: 1
-  _imaginaryComplexFault: 1
-  _initializations: 7
+  _imaginarySimpleFault: 0
+  _imaginaryComplexFault: 0
+  _initializations: 0
 --- !u!1 &1547627874
 GameObject:
   m_ObjectHideFlags: 0

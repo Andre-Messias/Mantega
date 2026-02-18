@@ -1,18 +1,26 @@
 namespace Mantega.Core.Lifecycle.Example
 {
+    ///
+    /// This script demonstrates how to use the LifecycleBehaviour class to create a component that follows a specific lifecycle.
+    ///
+
     using System;
     using UnityEngine;
 
     public class LifecycleBehaviour_Example : LifecycleBehaviour
     {
+        // Fault simulation fields for testing the lifecycle's fault handling capabilities.
         [SerializeField] private bool _imaginarySimpleFault = false;
         [SerializeField] private bool _imaginaryComplexFault = false;
+
+        // A counter to track how many times the OnInitialize method has been called, demonstrating the lifecycle's initialization process.
         [SerializeField] private int _initializations = 0;
 
         protected override void OnAwake()
         {
             base.OnAwake();
             Debug.Log("OnAwake");
+            Initialized.Then(DebugInitialize);
         }
 
         protected override void OnStart()
@@ -60,5 +68,7 @@ namespace Mantega.Core.Lifecycle.Example
             _imaginarySimpleFault = false;
             _imaginaryComplexFault = false;
         }
+
+        private void DebugInitialize() => Debug.Log("Debug Initialize called.");
     }
 }
