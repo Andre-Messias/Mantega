@@ -91,8 +91,6 @@ namespace Mantega.Core.Lifecycle.Editor
 
             action(lifecycle);
 
-            lifecycle.EditorForceUpdateEventState();
-
             EditorUtility.SetDirty(lifecycle);
         }
     }

@@ -16,12 +16,33 @@ namespace Mantega.Core.Lifecycle
         /// component.</remarks>
         public enum LifecyclePhase
         {
+            /// <summary>
+            /// Indicates that the component has not been initialized.
+            /// </summary>
             Uninitialized,
+            /// <summary>
+            /// Indicates that the component is in the process of shutting down or releasing resources.
+            /// </summary>
             Uninitializing,
+            /// <summary>
+            /// Indicates that the component is in the process of restarting to factory defaults.
+            /// </summary>
             Restarting, 
-            Initializing, 
+            /// <summary>
+            /// Indicates that the component is in the process of initializing and is not yet ready for use.
+            /// </summary>
+            Initializing,
+            /// <summary>
+            /// Indicates that the component is fully initialized and ready for use.
+            /// </summary>
             Initialized,
+            /// <summary>
+            /// Indicates that the component has encountered a fault and is not operational.
+            /// </summary>
             Faulted,
+            /// <summary>
+            /// Indicates that the component is in the process of recovering from a fault and is not yet operational.
+            /// </summary>
             Fixing
         }
 
