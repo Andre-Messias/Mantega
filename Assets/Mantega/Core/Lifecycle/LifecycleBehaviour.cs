@@ -391,11 +391,7 @@ namespace Mantega.Core.Lifecycle
             string operationName)
         {
 #if UNITY_EDITOR
-            if (_runtimeOnly && !Application.isPlaying)
-            {
-                RuntimeOnlyWarning(operationName);
-                return;
-            }
+            RuntimeOnlyValidation(operationName);
 #endif
 
             LifecyclePhase currentStatus = _status;
@@ -432,11 +428,7 @@ namespace Mantega.Core.Lifecycle
             string operationName)
         {
 #if UNITY_EDITOR
-            if (_runtimeOnly && !Application.isPlaying)
-            {
-                RuntimeOnlyWarning(operationName);
-                return;
-            }
+            RuntimeOnlyValidation(operationName);
 #endif
 
             LifecyclePhase currentStatus = _status;
@@ -493,6 +485,15 @@ namespace Mantega.Core.Lifecycle
         }
 
 #if UNITY_EDITOR
+        private void RuntimeOnlyValidation(string operationName)
+        {
+            if (_runtimeOnly && !Application.isPlaying)
+            {
+                RuntimeOnlyWarning(operationName);
+                throw new InvalidOperationException($"Cannot perform '{operationName}' in edit mode when runtime-only mode is enabled.");
+            }
+        }
+
         /// <summary>
         /// Logs a warning indicating that a lifecycle operation was attempted in edit mode, which is only permitted at
         /// runtime.
