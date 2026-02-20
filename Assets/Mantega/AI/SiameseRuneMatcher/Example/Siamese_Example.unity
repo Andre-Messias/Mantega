@@ -128,8 +128,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 27945747}
-  - component: {fileID: 27945746}
   - component: {fileID: 27945748}
+  - component: {fileID: 27945746}
   m_Layer: 0
   m_Name: SiameseRuneMatcher_Example
   m_TagString: Untagged
@@ -151,8 +151,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Mantega.AI.SiameseRuneMatcher
   _status:
     _value: 0
-  _autoInitializeOption: 1
+  _autoInitializeOption: 2
   _runtimeOnly: 1
+  _initialized:
+    _isResolved: 0
   _modelAsset: {fileID: 5022602860645237092, guid: 673d399dfffa0dc459544d51a16323a9, type: 3}
 --- !u!4 &27945747
 Transform:

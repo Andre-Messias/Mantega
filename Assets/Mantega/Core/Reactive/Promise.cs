@@ -112,7 +112,7 @@ namespace Mantega.Core.Reactive
         /// </summary>
         public virtual void OnAfterDeserialize()
         {
-            _tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _tcs ??= new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             if (_isResolved)
             {
                 _tcs.TrySetResult(true);
@@ -226,7 +226,7 @@ namespace Mantega.Core.Reactive
         {
             base.OnAfterDeserialize();
 
-            _tcsT = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _tcsT ??= new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
             if (_isResolved)
             {
                 _tcsT.TrySetResult(_value);
