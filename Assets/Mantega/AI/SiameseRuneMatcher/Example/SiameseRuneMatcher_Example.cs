@@ -8,6 +8,7 @@ namespace Mantega.AI.Example
 
 #if UNITY_EDITOR
     using UnityEditor;
+    using Mantega.Core.Lifecycle;
 #endif
 
     public class SiameseRuneMatcher_Example : MonoBehaviour
@@ -30,18 +31,18 @@ namespace Mantega.AI.Example
             public override void OnInspectorGUI()
             {
                 DrawDefaultInspector();
-                SiameseRuneMatcher_Example myScript = (SiameseRuneMatcher_Example)target;
+                SiameseRuneMatcher_Example runeMatcher = (SiameseRuneMatcher_Example)target;
                 EditorGUILayout.Space(10);
                 if (GUILayout.Button("Compare Runes"))
                 {
                     // Check play mode to avoid runtime errors in the editor
-                    if (!Application.isPlaying)
+                    if (runeMatcher._runeMatcher.Status != ILifecycle.LifecyclePhase.Initialized)
                     {
-                        Debug.LogWarning("Please enter Play mode to compare runes.");
+                        Debug.LogWarning("Please initialize RuneMatcher to compare runes.");
                         return;
                     }
 
-                    float similarity = myScript.Compare();
+                    float similarity = runeMatcher.Compare();
                     bool isMatch = similarity >= SIMILARITY_THRESHOLD;
                     string color = isMatch ? "green" : "red";
                     string resultText = isMatch ? "MATCH" : "NO MATCH";

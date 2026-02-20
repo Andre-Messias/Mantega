@@ -4,17 +4,34 @@ namespace Mantega.AI
     using Unity.InferenceEngine;
 
     using Mantega.Core.Diagnostics;
+    using Mantega.Core.Lifecycle;
 
-    public class SiameseRuneMatcher : MonoBehaviour
+    public class SiameseRuneMatcher : LifecycleBehaviour
     {
+        [Header("Model Settings")]
         [SerializeField] private ModelAsset _modelAsset;
-        private Model _runtimeModel;
 
+        public ModelAsset ModelAsset
+        {
+            get => _modelAsset;
+            set
+            {
+                if (_modelAsset != value)
+                {
+                    bool wasInitialized = _status == ILifecycle.LifecyclePhase.Initialized;
+                    if (wasInitialized) Restart();
+                    _modelAsset = value;
+                    if (wasInitialized) Initialize();
+                }
+            }
+        }
+
+        private Model _runtimeModel;
         private Worker _worker;
         private Tensor<float> _tensor1;
         private Tensor<float> _tensor2;
 
-        private void Awake()
+        protected override void OnInitialize()
         {
             Validations.ValidateNotNull(_modelAsset, this);
 
@@ -38,6 +55,12 @@ namespace Mantega.AI
 
         public float Compare(Texture2D texture1, Texture2D texture2)
         {
+            if(_status != ILifecycle.LifecyclePhase.Initialized)
+            {
+                Log.Error($"Attempted to compare textures before SiameseRuneMatcher was initialized. Use {nameof(Initialized)} to ensure the component is ready before calling Compare.", this);
+                return 0f;
+            }
+
             Validations.ValidateNotNull(texture1);
             Validations.ValidateNotNull(texture2);
 
@@ -65,12 +88,37 @@ namespace Mantega.AI
             }
         }
 
-        void OnDestroy()
+        protected override void OnUninitialize()
         {
-            // Clean up resources
+            base.OnUninitialize();
+            CleanUpResources();
+        }
+
+        protected override void OnRestart()
+        {
+            base.OnRestart();
+            CleanUpResources();
+            _modelAsset = null;
+        }
+
+        protected override void OnFixFault()
+        {
+            base.OnFixFault();
+            if (_modelAsset == null)
+            {
+                throw new System.InvalidOperationException("Cannot fix fault without a valid model asset reference.");
+            }
+            CleanUpResources();
+        }
+
+        private void CleanUpResources()
+        {
             _worker?.Dispose();
+            _worker = null;
             _tensor1?.Dispose();
+            _tensor1 = null;
             _tensor2?.Dispose();
+            _tensor2 = null;
         }
     }
 }

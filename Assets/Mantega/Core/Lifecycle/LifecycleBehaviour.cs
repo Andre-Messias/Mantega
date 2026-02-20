@@ -53,6 +53,7 @@ namespace Mantega.Core.Lifecycle
         public LifecyclePhase Status => _status;
         #endregion
 
+        #region Lifecycle Options
         #region Auto Initialize Option
         /// <summary>
         /// Specifies options for automatically initializing the component.
@@ -79,6 +80,15 @@ namespace Mantega.Core.Lifecycle
         /// </summary>
         [Header("Lifecycle Options")]
         [SerializeField] private AutoInitializeOption _autoInitializeOption = AutoInitializeOption.None;
+        #endregion
+        #region Runtime Only Option
+#if UNITY_EDITOR
+        /// <summary>
+        /// Specifies whether lifecycle controls should only be available during play mode.
+        /// </summary>
+        [SerializeField] protected bool _runtimeOnly = false;
+#endif
+        #endregion
         #endregion
 
         #region Initialized Event
@@ -380,6 +390,13 @@ namespace Mantega.Core.Lifecycle
             LifecyclePhase successPhase,
             string operationName)
         {
+#if UNITY_EDITOR
+            if (_runtimeOnly && !Application.isPlaying)
+            {
+                RuntimeOnlyWarning(operationName);
+            }
+#endif
+
             LifecyclePhase currentStatus = _status;
             if (!canExecutePredicate(currentStatus))
             {
@@ -413,6 +430,13 @@ namespace Mantega.Core.Lifecycle
             LifecyclePhase successPhase,
             string operationName)
         {
+#if UNITY_EDITOR
+            if (_runtimeOnly && !Application.isPlaying)
+            {
+                RuntimeOnlyWarning(operationName);
+            }
+#endif
+
             LifecyclePhase currentStatus = _status;
             if (!canExecutePredicate(currentStatus))
             {
@@ -465,6 +489,19 @@ namespace Mantega.Core.Lifecycle
         {
             Log.Warning($"Cannot perform '{operationName}' while in status {currentStatus}.", this);
         }
+
+#if UNITY_EDITOR
+        /// <summary>
+        /// Logs a warning indicating that a lifecycle operation was attempted in edit mode, which is only permitted at
+        /// runtime.
+        /// </summary>
+        /// <param name="operationName">The name of the lifecycle operation that was attempted in edit mode.</param>
+        private void RuntimeOnlyWarning(string operationName)
+        {
+            Log.Warning($"Attempted to perform '{operationName}' in edit mode, but lifecycle operations are restricted to runtime only.", this);
+        }
+#endif
+
         #endregion
 
         /// <summary>
@@ -473,6 +510,20 @@ namespace Mantega.Core.Lifecycle
         private bool ShouldResetInitializedEvent(LifecyclePhase lifecyclePhase)
         {
             return CanInitialize(lifecyclePhase) && _initialized.HasFired;
+        }
+
+        /// <summary>
+        /// Unity's OnDestroy method.
+        /// </summary>
+        /// <remarks>
+        /// Acts as a fail-safe to ensure uninitialization occurs if the object is destroyed.
+        /// </remarks>
+        protected virtual void OnDestroy()
+        {
+            if (CanUninitialize())
+            {
+                Uninitialize();
+            }
         }
     }
 }

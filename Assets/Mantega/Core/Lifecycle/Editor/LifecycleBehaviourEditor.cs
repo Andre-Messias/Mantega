@@ -17,6 +17,21 @@ namespace Mantega.Core.Lifecycle.Editor
     public class LifecycleBehaviourEditor : Editor
     {
         /// <summary>
+        /// Serialized property reference for the _runtimeOnly field in LifecycleBehaviour.
+        /// </summary>
+        private SerializedProperty _runtimeOnlyProperty;
+
+        /// <summary>
+        /// Initializes references or state when the component is enabled in the Unity Editor.
+        /// </summary>
+        /// <remarks>This method is called automatically by Unity when the script is loaded or a value is
+        /// changed in the Inspector.</remarks>
+        private void OnEnable()
+        {
+            _runtimeOnlyProperty = serializedObject.FindProperty("_runtimeOnly");
+        }
+
+        /// <summary>
         /// Draws the custom inspector GUI for a LifecycleBehaviour.
         /// </summary>
         public override void OnInspectorGUI()
@@ -32,6 +47,8 @@ namespace Mantega.Core.Lifecycle.Editor
             EditorGUILayout.EnumPopup("Current Phase", lifecycle.Status);
             EditorGUI.EndDisabledGroup();
 
+            bool shouldDisable = _runtimeOnlyProperty.boolValue && !Application.isPlaying;
+            EditorGUI.BeginDisabledGroup(shouldDisable);
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
@@ -72,6 +89,7 @@ namespace Mantega.Core.Lifecycle.Editor
             }
 
             GUILayout.EndHorizontal();
+            EditorGUI.EndDisabledGroup();
         }
 
         /// <summary>
