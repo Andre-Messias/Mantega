@@ -33,7 +33,7 @@ namespace Mantega.Core.Lifecycle
         /// <para>
         /// <alert class="warning">
         /// <b>Warning:</b> If you subscribe to <see cref="Syncable{T}.OnValueChanged"/> on <see cref="SyncableStatus"/>,
-        /// be aware that the specific lifecycle event (or <see cref="DeferredEvent.HasFired"/>) will <b>not</b> have been processed yet
+        /// be aware that the specific lifecycle event (or <see cref="Promise.IsResolved"/>) will <b>not</b> have been processed yet
         /// at the exact moment of the callback.
         /// </alert>
         /// </para>
@@ -95,12 +95,12 @@ namespace Mantega.Core.Lifecycle
         /// <summary>
         /// Event triggered when the component successfully completes the <see cref="LifecyclePhase.Initialized"/> phase.
         /// </summary>
-        private readonly DeferredEvent _initialized = new();
+        [SerializeField, HideInInspector] private Promise _initialized = new();
 
         /// <summary>
-        /// Gets a read-only view of the initialization event. Fired after <see cref="OnInitialize"/> completes.
+        /// Gets a read-only view of the initialization event. Resolved after <see cref="OnInitialize"/> completes.
         /// </summary>
-        public IReadOnlyDeferredEvent Initialized => _initialized;
+        public IReadOnlyPromise Initialized => _initialized;
         #endregion
 
         #region Auto Initialize
@@ -394,6 +394,7 @@ namespace Mantega.Core.Lifecycle
             if (_runtimeOnly && !Application.isPlaying)
             {
                 RuntimeOnlyWarning(operationName);
+                return;
             }
 #endif
 
@@ -434,6 +435,7 @@ namespace Mantega.Core.Lifecycle
             if (_runtimeOnly && !Application.isPlaying)
             {
                 RuntimeOnlyWarning(operationName);
+                return;
             }
 #endif
 
@@ -466,7 +468,7 @@ namespace Mantega.Core.Lifecycle
             _status.Value = successPhase;
 
             if (ShouldResetInitializedEvent(successPhase)) _initialized.Reset();
-            if (successPhase == LifecyclePhase.Initialized) _initialized.Fire();
+            if (successPhase == LifecyclePhase.Initialized) _initialized.Resolve();
         }
 
         /// <summary>
@@ -509,7 +511,7 @@ namespace Mantega.Core.Lifecycle
         /// </summary>
         private bool ShouldResetInitializedEvent(LifecyclePhase lifecyclePhase)
         {
-            return CanInitialize(lifecyclePhase) && _initialized.HasFired;
+            return CanInitialize(lifecyclePhase) && _initialized.IsResolved;
         }
 
         /// <summary>
@@ -523,6 +525,11 @@ namespace Mantega.Core.Lifecycle
             if (CanUninitialize())
             {
                 Uninitialize();
+            }
+
+            if (!_initialized.IsResolved)
+            {
+                _initialized.Cancel();
             }
         }
     }

@@ -20,7 +20,7 @@ namespace Mantega.Core.Lifecycle.Example
         {
             base.OnAwake();
             Debug.Log("OnAwake");
-            Initialized.Then(DebugInitialize);
+            DebugInitialize();
         }
 
         protected override void OnStart()
@@ -69,6 +69,10 @@ namespace Mantega.Core.Lifecycle.Example
             _imaginaryComplexFault = false;
         }
 
-        private void DebugInitialize() => Debug.Log("Debug Initialize called.");
+        private async void DebugInitialize()
+        {
+            await Initialized;
+            Debug.Log("Debug Initialize called.");
+        }
     }
 }

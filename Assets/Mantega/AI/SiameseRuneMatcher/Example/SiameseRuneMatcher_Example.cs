@@ -5,6 +5,7 @@ namespace Mantega.AI.Example
     ///
 
     using UnityEngine;
+    using System.Threading.Tasks;
 
 #if UNITY_EDITOR
     using UnityEditor;
@@ -17,8 +18,9 @@ namespace Mantega.AI.Example
         [SerializeField] private Texture2D _runeTexture1;
         [SerializeField] private Texture2D _runeTexture2;
 
-        public float Compare()
+        public async Task<float> Compare()
         {
+            await _runeMatcher.Initialized;
             return _runeMatcher.Compare(_runeTexture1, _runeTexture2);
         }
 
@@ -28,7 +30,7 @@ namespace Mantega.AI.Example
         {
             const float SIMILARITY_THRESHOLD = 0.6f; 
 
-            public override void OnInspectorGUI()
+            public override async void OnInspectorGUI()
             {
                 DrawDefaultInspector();
                 SiameseRuneMatcher_Example runeMatcher = (SiameseRuneMatcher_Example)target;
@@ -42,7 +44,7 @@ namespace Mantega.AI.Example
                         return;
                     }
 
-                    float similarity = runeMatcher.Compare();
+                    float similarity = await runeMatcher.Compare();
                     bool isMatch = similarity >= SIMILARITY_THRESHOLD;
                     string color = isMatch ? "green" : "red";
                     string resultText = isMatch ? "MATCH" : "NO MATCH";

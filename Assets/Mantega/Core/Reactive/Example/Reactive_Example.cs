@@ -18,7 +18,7 @@ namespace Mantega.Core.Reactive.Example
         [Serializable]
         private class InternalChange_Example : IInternalChange<InternalChange_Example>
         {
-            [SerializeField] private int _value1; 
+            [SerializeField] private int _value1;
             public int Value1
             {
                 get => _value1;
@@ -83,11 +83,11 @@ namespace Mantega.Core.Reactive.Example
         // IReadOnlySyncable - Allows you to read the value and subscribe to the event, but not modify it. Useful for exposing Syncables without allowing external modification.
         public IReadOnlySyncable<Color> ColorSyncable => _colorSyncable;
 
-        // DeferredEvent - Used to call a function when the object is ready
-        [SerializeField] private DeferredEvent<int> _deferredEvent = new();
+        // Promise - Used to await a future resolution.
+        [SerializeField] private Promise<int> _promise = new();
 
-        // IReadOnlyDeferredEvent - Allows you to subscribe to the event, but not fire it. Useful for exposing DeferredEvents without allowing external firing.
-        public IReadOnlyDeferredEvent<int> DeferredEvent => _deferredEvent;
+        // IReadOnlyPromise - Allows you to await the promise, but not resolve it. Useful for exposing Promises without allowing external resolution.
+        public IReadOnlyPromise<int> Promise => _promise;
 
         private void OnEnable()
         {
@@ -111,13 +111,14 @@ namespace Mantega.Core.Reactive.Example
             Debug.Log($"Internal Change Syncable Changed: Value1: {oldValue.Value1} -> {newValue.Value1}, Value2: {oldValue.Value2} -> {newValue.Value2}");
         }
 
-        public void AskDeferredEvent()
+        public async void AwaitPromise()
         {
             Debug.Log("Asked Deferred Event. If it has already been fired, the callback will be invoked immediately. Otherwise, it will be invoked once the event is fired.");
-            _deferredEvent.Then(OnDeferrendEvent);
+            var result = await _promise;
+            OnPromiseResolved(result);
         }
 
-        private void OnDeferrendEvent(int value)
+        private void OnPromiseResolved(int value)
         {
             if (this == null) return;
             Debug.Log($"Deferred Event Fired with value: {value}");
@@ -143,7 +144,7 @@ namespace Mantega.Core.Reactive.Example
         {
             OnInternalChange();
         }
-        
+
         [CustomEditor(typeof(Reactive_Example))]
         public class Syncables_ExampleEditor : Editor
         {
@@ -179,21 +180,21 @@ namespace Mantega.Core.Reactive.Example
 
                 // Title
                 EditorGUILayout.Space(10);
-                EditorGUILayout.LabelField("DeferredEvent Example", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField("Promise Example", EditorStyles.boldLabel);
 
-                // Firing the deferred event
-                if(GUILayout.Button("Fire Deferred Event with random value"))
+                // Resolving the promise
+                if (GUILayout.Button("Resolve Promise with random value"))
                 {
-                    example._deferredEvent.Fire(UnityEngine.Random.Range(0, 100));
+                    example._promise.Resolve(UnityEngine.Random.Range(0, 100));
                 }
-                else if(GUILayout.Button("Reset Deferred Event"))
+                else if (GUILayout.Button("Reset Promise"))
                 {
-                    example._deferredEvent.Reset();
-                    Debug.Log("Deferred Event Reset. You can now fire it again to see the changes.");
+                    example._promise.Reset();
+                    Debug.Log("Promise Reset. You can now resolve it again to see the changes.");
                 }
-                else if(GUILayout.Button("Ask Deferred Event"))
+                else if (GUILayout.Button("Await Promise"))
                 {
-                    example.AskDeferredEvent();
+                    example.AwaitPromise();
                 }
 
                 if (changeButtonPressed)
@@ -210,5 +211,4 @@ namespace Mantega.Core.Reactive.Example
         }
 #endif
     }
-
 }
