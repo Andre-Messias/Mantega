@@ -4,7 +4,7 @@ using UnityEngine;
 using Mantega.Core.Diagnostics;
 using Mantega.Geometry; 
 
-namespace Mantega.Runes
+namespace Mantega.RuneSystem
 {
     /// <summary>
     /// Provides methods for processing and normalizing drawn line renderers.

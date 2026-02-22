@@ -73,28 +73,36 @@ namespace Mantega.Core.Diagnostics
         #endregion
 
         #region Validate Component Exists
-        public static void ValidateComponentExists<T>(GameObject target, Object context = null, [CallerArgumentExpression("target")] string paramName = "") where T : Component
+        public static T ValidateComponentExists<T>(GameObject target, Object context = null, [CallerArgumentExpression("target")] string paramName = "") where T : Component
         {
             ValidateNotNull(target, context, paramName);
 
-            if (target.GetComponent<T>() == null)
+            if (!target.TryGetComponent(out T component))
             {
                 string message = BuildErrorMessage($"Required component '{typeof(T).Name}' not found", paramName, "GameObject", context);
                 throw new MissingComponentException(message);
             }
+            else
+            {
+                return component;
+            }
         }
 
-        public static void ValidateComponentInChildrenExists<T>(GameObject target, Object context = null, bool includeInactive = true, [CallerArgumentExpression("target")] string paramName = "") where T : Component
+        public static T ValidateComponentInChildrenExists<T>(GameObject target, Object context = null, bool includeInactive = true, [CallerArgumentExpression("target")] string paramName = "") where T : Component
         {
             ValidateNotNull(target, context, paramName);
-
-            if (target.GetComponentInChildren<T>(includeInactive) == null)
+            T component = target.GetComponentInChildren<T>(includeInactive);
+            if (component == null)
             {
                 string inactiveNotice = includeInactive ? " (including inactive elements)" : "";
                 string reason = $"Required component '{typeof(T).Name}' not found in hierarchy{inactiveNotice}";
 
                 string message = BuildErrorMessage(reason, paramName, "GameObject", context);
                 throw new MissingComponentException(message);
+            }
+            else
+            {
+                return component;
             }
         }
         #endregion

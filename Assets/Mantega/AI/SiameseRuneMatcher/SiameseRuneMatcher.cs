@@ -65,11 +65,13 @@ namespace Mantega.AI
         private Tensor<float> _tensor2;
         #endregion
 
+        #region Lifecycle
         /// <summary>
         /// Initializes the component and prepares required resources for operation.
         /// </summary>
         protected override void OnInitialize()
         {
+            base.OnInitialize();
             Validations.ValidateNotNull(_modelAsset, this);
             GenerateResources();
         }
@@ -99,6 +101,56 @@ namespace Mantega.AI
             _tensor1 = new Tensor<float>(inputShape);
             _tensor2 = new Tensor<float>(inputShape);
         }
+
+        /// <summary>
+        /// Performs cleanup operations when the component is being uninitialized.
+        /// </summary>
+        protected override void OnUninitialize()
+        {
+            base.OnUninitialize();
+            CleanUpResources();
+        }
+
+        /// <summary>
+        /// Handles operations required when the component is restarted, ensuring that resources are properly cleaned up
+        /// and internal state is reset.
+        /// </summary>
+        protected override void OnRestart()
+        {
+            base.OnRestart();
+            CleanUpResources();
+            _modelAsset = null;
+        }
+
+        /// <summary>
+        /// Attempts to resolve a fault condition by performing cleanup operations.
+        /// </summary>
+        /// <remarks>This method should be called when a fault needs to be fixed and requires a valid
+        /// model asset reference.</remarks>
+        /// <exception cref="System.InvalidOperationException">Thrown if the model asset reference is not set, indicating that fault resolution cannot proceed without a
+        /// valid asset.</exception>
+        protected override void OnFixFault()
+        {
+            base.OnFixFault();
+            Validations.ValidateNotNull(_modelAsset, this);
+            CleanUpResources();
+        }
+
+        /// <summary>
+        /// Releases resources.
+        /// </summary>
+        /// <remarks>Call this method to ensure that all disposable resources associated with the current
+        /// instance are properly released.</remarks>
+        private void CleanUpResources()
+        {
+            _worker?.Dispose();
+            _worker = null;
+            _tensor1?.Dispose();
+            _tensor1 = null;
+            _tensor2?.Dispose();
+            _tensor2 = null;
+        }
+        #endregion
 
         /// <summary>
         /// Calculates a similarity score between two textures.
@@ -144,58 +196,6 @@ namespace Mantega.AI
             {
                 return cpuData[0]; 
             }
-        }
-
-        /// <summary>
-        /// Performs cleanup operations when the component is being uninitialized.
-        /// </summary>
-        protected override void OnUninitialize()
-        {
-            base.OnUninitialize();
-            CleanUpResources();
-        }
-
-        /// <summary>
-        /// Handles operations required when the component is restarted, ensuring that resources are properly cleaned up
-        /// and internal state is reset.
-        /// </summary>
-        protected override void OnRestart()
-        {
-            base.OnRestart();
-            CleanUpResources();
-            _modelAsset = null;
-        }
-
-        /// <summary>
-        /// Attempts to resolve a fault condition by performing cleanup operations.
-        /// </summary>
-        /// <remarks>This method should be called when a fault needs to be fixed and requires a valid
-        /// model asset reference.</remarks>
-        /// <exception cref="System.InvalidOperationException">Thrown if the model asset reference is not set, indicating that fault resolution cannot proceed without a
-        /// valid asset.</exception>
-        protected override void OnFixFault()
-        {
-            base.OnFixFault();
-            if (_modelAsset == null)
-            {
-                throw new System.InvalidOperationException("Cannot fix fault without a valid model asset reference.");
-            }
-            CleanUpResources();
-        }
-
-        /// <summary>
-        /// Releases resources.
-        /// </summary>
-        /// <remarks>Call this method to ensure that all disposable resources associated with the current
-        /// instance are properly released.</remarks>
-        private void CleanUpResources()
-        {
-            _worker?.Dispose();
-            _worker = null;
-            _tensor1?.Dispose();
-            _tensor1 = null;
-            _tensor2?.Dispose();
-            _tensor2 = null;
         }
     }
 }

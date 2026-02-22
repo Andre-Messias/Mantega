@@ -6,7 +6,7 @@ using Mantega.Core.Diagnostics;
 using Mantega.Drawer; 
 using Mantega.Geometry;
 
-namespace Mantega.Runes
+namespace Mantega.RuneSystem
 {
     #if UNITY_EDITOR
     using UnityEditor;

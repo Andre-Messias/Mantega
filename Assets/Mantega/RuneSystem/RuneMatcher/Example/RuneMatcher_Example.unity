@@ -289,7 +289,7 @@ MonoBehaviour:
   _status:
     _value: 0
   _autoInitializeOption: 1
-  _runtimeOnly: 0
+  _runtimeOnly: 1
   _initialized:
     _isResolved: 0
   _siameseRuneMatcher: {fileID: 1859456149}
