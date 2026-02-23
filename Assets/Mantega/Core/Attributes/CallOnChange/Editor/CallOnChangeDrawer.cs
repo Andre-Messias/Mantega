@@ -4,6 +4,9 @@ namespace Mantega.Core.Editor
     using UnityEngine;
     using UnityEditor;
 
+    using Mantega.Core;
+    using Mantega.Core.Diagnostics;
+
     /// <summary>
     /// Drawer for the <see cref="CallOnChangeAttribute"/> that invokes a method when the property changes
     /// </summary>
@@ -19,9 +22,27 @@ namespace Mantega.Core.Editor
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             object targetObject = GetParentObject(property);
+            if(targetObject == null)
+            {
+                EditorGUI.PropertyField(position, property, label, true);
+                Log.Warning($"[CallOnChange] Could not find target object for property '{property.name}' in '{property.serializedObject.targetObject.GetType().Name}'.", property.serializedObject.targetObject);
+                return;
+            }
 
             // Get the current (old) value
             object oldValue = fieldInfo.GetValue(targetObject);
+            if (oldValue is System.ICloneable cloneable)
+            {
+                oldValue = cloneable.Clone(); 
+            }
+            else if (oldValue is System.Collections.IList)
+            {
+                var type = oldValue.GetType();
+                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.List<>))
+                {
+                    oldValue = System.Activator.CreateInstance(type, oldValue);
+                }
+            }
 
             // Start checking for changes
             EditorGUI.BeginChangeCheck();
@@ -133,16 +154,34 @@ namespace Mantega.Core.Editor
         private static object GetParentObject(SerializedProperty property)
         {
             object obj = property.serializedObject.targetObject;
-            string[] path = property.propertyPath.Split('.');
+            // The property path uses ".Array.data[index]" for array elements, so we need to replace it with "[index]" to correctly parse the path
+            string path = property.propertyPath.Replace(".Array.data[", "[");
+            string[] elements = path.Split('.');
 
-            for (int i = 0; i < path.Length - 1; i++)
+            for (int i = 0; i < elements.Length - 1; i++)
             {
-                var type = obj.GetType();
-                FieldInfo field = type.GetField(path[i],
-                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                string element = elements[i];
+                if (element.Contains("["))
+                {
+                    string elementName = element[..element.IndexOf("[")];
+                    int index = System.Convert.ToInt32(element[element.IndexOf("[")..].Replace("[", "").Replace("]", ""));
 
-                if (field == null) return null;
-                obj = field.GetValue(obj);
+                    FieldInfo field = obj.GetType().GetField(elementName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    if (field == null) return null;
+
+                    obj = field.GetValue(obj);
+                    if (obj is System.Collections.IList list && index < list.Count)
+                    {
+                        obj = list[index];
+                    }
+                    else return null;
+                }
+                else
+                {
+                    FieldInfo field = obj.GetType().GetField(element, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    if (field == null) return null;
+                    obj = field.GetValue(obj);
+                }
             }
 
             return obj;

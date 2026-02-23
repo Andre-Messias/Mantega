@@ -68,6 +68,8 @@ namespace Mantega.Core.Reactive.Example
             {
                 return new InternalChange_Example(_value1, _value2);
             }
+
+            object ICloneable.Clone() => Clone();
         }
 
         // Syncable - Can be public if you want to edit it from other scripts.

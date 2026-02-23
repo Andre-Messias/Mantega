@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89b17940e20f9de4fa518e775486d3a4, type: 3}
+  m_Name: FireRuneSet
+  m_EditorClassIdentifier: Assembly-CSharp::Mantega.RuneSystem.RuneSet
+  _type: {fileID: 11400000, guid: 2673d2a25a6b38244913119aaf49803c, type: 2}
+  _runes: []
