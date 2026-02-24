@@ -1,8 +1,8 @@
 using UnityEngine;
 
-using Mantega.Syncables;
+using Mantega.Core.Reactive;
 using Mantega.Stats;
-using Mantega.Variables;
+using Mantega.Core.Variables;
 
 #if UNITY_EDITOR
 using UnityEditor;

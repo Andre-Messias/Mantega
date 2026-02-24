@@ -1,6 +1,6 @@
 namespace Mantega.Drawer
 {
-    using Mantega.Diagnostics;
+    using Mantega.Core.Diagnostics;
     using UnityEngine;
     using UnityEngine.InputSystem;
 
