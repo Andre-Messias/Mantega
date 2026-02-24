@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Mantega.RuneSystem.Rune
   _texture: {fileID: 0}
   _points: []
-  _type: {fileID: 11400000, guid: 2673d2a25a6b38244913119aaf49803c, type: 2}
+  _type: {fileID: 11400000, guid: 65f3c5e131b7d65448d9d7baf529e6b0, type: 2}

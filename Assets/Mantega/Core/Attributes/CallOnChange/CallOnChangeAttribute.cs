@@ -20,6 +20,9 @@ namespace Mantega.Core
     /// <item><description><b>Two parameters:</b> Accepts the old value and the new value.</description></item>
     /// </list>
     /// </para>
+    /// <para>
+    /// <b>Warning:</b> This attribute does not work for list or array fields.
+    /// </para>
     /// </remarks>
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
     public class CallOnChangeAttribute : PropertyAttribute

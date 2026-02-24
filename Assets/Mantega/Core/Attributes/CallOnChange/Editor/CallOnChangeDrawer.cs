@@ -22,10 +22,19 @@ namespace Mantega.Core.Editor
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             object targetObject = GetParentObject(property);
-            if(targetObject == null)
+            if (property.isArray || property.propertyPath.Contains(".Array.data["))
             {
                 EditorGUI.PropertyField(position, property, label, true);
-                Log.Warning($"[CallOnChange] Could not find target object for property '{property.name}' in '{property.serializedObject.targetObject.GetType().Name}'.", property.serializedObject.targetObject);
+
+                Rect helpBoxRect = new Rect(position.x, position.y + EditorGUI.GetPropertyHeight(property, label, true) + 2, position.width, 30);
+                EditorGUI.HelpBox(helpBoxRect, "[CallOnChange] not supported on Arrays/Lists. Use OnValidate.", MessageType.Warning);
+                return;
+            }
+            else if (targetObject == null)
+            {
+                EditorGUI.PropertyField(position, property, label, true);
+                Rect helpBoxRect = new Rect(position.x, position.y + EditorGUI.GetPropertyHeight(property, label, true) + 2, position.width, 30);
+                EditorGUI.HelpBox(helpBoxRect, "[CallOnChange] Could not find target object. Make sure the property is not static and is a field of a MonoBehaviour or ScriptableObject.", MessageType.Warning);
                 return;
             }
 
@@ -34,14 +43,6 @@ namespace Mantega.Core.Editor
             if (oldValue is System.ICloneable cloneable)
             {
                 oldValue = cloneable.Clone(); 
-            }
-            else if (oldValue is System.Collections.IList)
-            {
-                var type = oldValue.GetType();
-                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.List<>))
-                {
-                    oldValue = System.Activator.CreateInstance(type, oldValue);
-                }
             }
 
             // Start checking for changes
@@ -108,21 +109,26 @@ namespace Mantega.Core.Editor
                         }
                     }
 
-                    switch(parameters.Length)
+                    EditorApplication.delayCall += () =>
                     {
-                        case 0:
-                            method.Invoke(targetObject, null);
-                            break;
-                        case 1:
-                            method.Invoke(targetObject, new[] { arg2 });
-                            break;
-                        case 2:
-                            method.Invoke(targetObject, new[] { arg1, arg2 });
-                            break;
-                        default:
-                            Debug.LogError($"[CallOnChange] Method '{callOnChangeAttribute.MethodName}' in '{currentType.Name}' must have either 0, 1 or 2 parameters (old value and/or new value).");
-                            break;
-                    }
+                        if (targetObject == null) return;
+
+                        switch (parameters.Length)
+                        {
+                            case 0:
+                                method.Invoke(targetObject, null);
+                                break;
+                            case 1:
+                                method.Invoke(targetObject, new[] { arg2 });
+                                break;
+                            case 2:
+                                method.Invoke(targetObject, new[] { arg1, arg2 });
+                                break;
+                            default:
+                                Debug.LogError($"[CallOnChange] Method '{callOnChangeAttribute.MethodName}' in '{currentType.Name}' must have either 0, 1 or 2 parameters.");
+                                break;
+                        }
+                    };
                 }
                 else
                 {
@@ -154,34 +160,13 @@ namespace Mantega.Core.Editor
         private static object GetParentObject(SerializedProperty property)
         {
             object obj = property.serializedObject.targetObject;
-            // The property path uses ".Array.data[index]" for array elements, so we need to replace it with "[index]" to correctly parse the path
-            string path = property.propertyPath.Replace(".Array.data[", "[");
-            string[] elements = path.Split('.');
+            string[] elements = property.propertyPath.Split('.');
 
             for (int i = 0; i < elements.Length - 1; i++)
             {
-                string element = elements[i];
-                if (element.Contains("["))
-                {
-                    string elementName = element[..element.IndexOf("[")];
-                    int index = System.Convert.ToInt32(element[element.IndexOf("[")..].Replace("[", "").Replace("]", ""));
-
-                    FieldInfo field = obj.GetType().GetField(elementName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                    if (field == null) return null;
-
-                    obj = field.GetValue(obj);
-                    if (obj is System.Collections.IList list && index < list.Count)
-                    {
-                        obj = list[index];
-                    }
-                    else return null;
-                }
-                else
-                {
-                    FieldInfo field = obj.GetType().GetField(element, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                    if (field == null) return null;
-                    obj = field.GetValue(obj);
-                }
+                FieldInfo field = obj.GetType().GetField(elements[i], BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (field == null) return null;
+                obj = field.GetValue(obj);
             }
 
             return obj;

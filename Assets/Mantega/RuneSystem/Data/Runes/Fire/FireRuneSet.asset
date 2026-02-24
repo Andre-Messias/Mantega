@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 89b17940e20f9de4fa518e775486d3a4, type: 3}
   m_Name: FireRuneSet
   m_EditorClassIdentifier: Assembly-CSharp::Mantega.RuneSystem.RuneSet
-  _type: {fileID: 11400000, guid: 2673d2a25a6b38244913119aaf49803c, type: 2}
+  _type: {fileID: 11400000, guid: 65f3c5e131b7d65448d9d7baf529e6b0, type: 2}
   _runes: []
