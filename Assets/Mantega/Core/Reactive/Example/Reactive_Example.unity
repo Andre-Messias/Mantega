@@ -164,11 +164,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Syncables_Example
   _colorSyncable:
-    _value: {r: 0.15005542, g: 0.84048665, b: 0.43948716, a: 1}
+    _value: {r: 0.94509804, g: 0.75686276, b: 0.49411765, a: 1}
   _internalChangeSyncable:
     _value:
-      _value1: 90
-      _value2: {r: 1, g: 1, b: 1, a: 1}
+      _value1: 233
+      _value2: {r: 0.4867924, g: 0.2268636, b: 0.2268636, a: 1}
+  _promise:
+    _isResolved: 0
+    _value: 0
 --- !u!1 &1447454392
 GameObject:
   m_ObjectHideFlags: 0

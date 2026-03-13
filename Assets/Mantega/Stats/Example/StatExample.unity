@@ -313,11 +313,11 @@ MonoBehaviour:
       _value: 0
   _syncableControlledInt:
     _value:
-      _value: -13
-      _max: 36
+      _value: 220
+      _max: 61
       _min: -13
   _syncableInt:
-    _value: 0
+    _value: 7
   references:
     version: 2
     RefIds:
