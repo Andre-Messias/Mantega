@@ -5,7 +5,7 @@ namespace Mantega.Core.Editor
     using UnityEditor;
 
     using Mantega.Core;
-    using Mantega.Core.Diagnostics;
+    using System;
 
     /// <summary>
     /// Drawer for the <see cref="CallOnChangeAttribute"/> that invokes a method when the property changes
@@ -26,24 +26,32 @@ namespace Mantega.Core.Editor
             {
                 EditorGUI.PropertyField(position, property, label, true);
 
-                Rect helpBoxRect = new Rect(position.x, position.y + EditorGUI.GetPropertyHeight(property, label, true) + 2, position.width, 30);
+                Rect helpBoxRect = new(position.x, position.y + EditorGUI.GetPropertyHeight(property, label, true) + 2, position.width, 30);
                 EditorGUI.HelpBox(helpBoxRect, "[CallOnChange] not supported on Arrays/Lists. Use OnValidate.", MessageType.Warning);
                 return;
             }
             else if (targetObject == null)
             {
                 EditorGUI.PropertyField(position, property, label, true);
-                Rect helpBoxRect = new Rect(position.x, position.y + EditorGUI.GetPropertyHeight(property, label, true) + 2, position.width, 30);
+                Rect helpBoxRect = new(position.x, position.y + EditorGUI.GetPropertyHeight(property, label, true) + 2, position.width, 30);
                 EditorGUI.HelpBox(helpBoxRect, "[CallOnChange] Could not find target object. Make sure the property is not static and is a field of a MonoBehaviour or ScriptableObject.", MessageType.Warning);
                 return;
             }
 
             // Get the current (old) value
-            object oldValue = fieldInfo.GetValue(targetObject);
-            if (oldValue is System.ICloneable cloneable)
+            object rawOldValue = fieldInfo.GetValue(targetObject);
+            object oldExtractedValue = rawOldValue;
+            if (rawOldValue is IValueContainer oldContainerBase)
             {
-                oldValue = cloneable.Clone(); 
+                oldExtractedValue = oldContainerBase.GetValue();
             }
+
+            object clonedOldValue = oldExtractedValue switch
+            {
+                ITypedCloneable<object> typed => typed.Clone(),
+                ICloneable cloneable => cloneable.Clone(),
+                _ => oldExtractedValue // Fallback 
+            };
 
             // Start checking for changes
             EditorGUI.BeginChangeCheck();
@@ -59,7 +67,16 @@ namespace Mantega.Core.Editor
                 property.serializedObject.ApplyModifiedProperties();
 
                 // Get the current (new) value
-                object newValue = fieldInfo.GetValue(targetObject);
+                object rawNewValue = fieldInfo.GetValue(targetObject);
+                object newExtractedValue = rawNewValue;
+                if (rawNewValue is IValueContainer newContainerBase)
+                {
+                    newExtractedValue = newContainerBase.GetValue();
+                }
+
+                // Check for change
+                if (Equals(clonedOldValue, newExtractedValue)) return;
+                
 
                 // Get the target object the property belongs to
                 var currentType = targetObject.GetType();
@@ -83,33 +100,10 @@ namespace Mantega.Core.Editor
                 {
                     var parameters = method.GetParameters();
 
-                    object arg1 = oldValue;
-                    object arg2 = newValue;
+                    object arg1 = clonedOldValue;
+                    object arg2 = newExtractedValue;
 
-                    if (oldValue is IValueContainer oldContainer)
-                    {
-                        // If the method expects a parameter that is not the same type as the old value, try to get the value from the container
-                        if (parameters.Length > 0 && !parameters[0].ParameterType.IsInstanceOfType(oldValue))
-                        {
-                            arg1 = oldContainer.GetValue();
-                        }
-                    }
-
-                    if (newValue is IValueContainer newContainer)
-                    {
-                        // If the method expects a parameter that is not the same type as the new value, try to get the value from the container
-                        if (parameters.Length > 1 && !parameters[1].ParameterType.IsInstanceOfType(newValue))
-                        {
-                            arg2 = newContainer.GetValue();
-                        }
-                        // If the method expects only one parameter and it's not the same type as the new value, try to get the value from the container
-                        else if (parameters.Length == 1 && !parameters[0].ParameterType.IsInstanceOfType(newValue))
-                        {
-                            arg2 = newContainer.GetValue();
-                        }
-                    }
-
-                    EditorApplication.delayCall += () =>
+                    void executeMethod()
                     {
                         if (targetObject == null) return;
 
@@ -128,7 +122,21 @@ namespace Mantega.Core.Editor
                                 Debug.LogError($"[CallOnChange] Method '{callOnChangeAttribute.MethodName}' in '{currentType.Name}' must have either 0, 1 or 2 parameters.");
                                 break;
                         }
+
+                        if (!callOnChangeAttribute.UseDelayCall)
+                        {
+                            property.serializedObject.Update();
+                        }
                     };
+
+                    if (callOnChangeAttribute.UseDelayCall)
+                    {
+                        EditorApplication.delayCall += executeMethod;
+                    }
+                    else
+                    {
+                        executeMethod();
+                    }
                 }
                 else
                 {

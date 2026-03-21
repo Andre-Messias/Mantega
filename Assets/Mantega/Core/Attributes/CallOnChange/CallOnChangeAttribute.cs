@@ -33,12 +33,18 @@ namespace Mantega.Core
         [HideInInspector] public readonly string MethodName;
 
         /// <summary>
+        /// Indicates whether delayed call execution is enabled.
+        /// </summary>
+        [HideInInspector] public readonly bool UseDelayCall;
+
+        /// <summary>
         /// Calls a method in the target object when the decorated field changes
         /// </summary>
         /// <param name="methodName">The name of the method to call</param>
-        public CallOnChangeAttribute(string methodName)
+        public CallOnChangeAttribute(string methodName, bool useDelayCall = false)
         {
             MethodName = methodName;
+            UseDelayCall = useDelayCall;
         }
     }
 }

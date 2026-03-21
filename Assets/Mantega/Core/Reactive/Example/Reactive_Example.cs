@@ -69,16 +69,25 @@ namespace Mantega.Core.Reactive.Example
                 return new InternalChange_Example(_value1, _value2);
             }
 
-            object ICloneable.Clone() => Clone();
+            public override bool Equals(object obj)
+            {
+                if (obj is not InternalChange_Example other) return false;
+                return _value1 == other._value1 && _value2 == other._value2;
+            }
+
+            public override int GetHashCode()
+            {
+                return HashCode.Combine(_value1, _value2);
+            }
         }
 
         // Syncable - Can be public if you want to edit it from other scripts.
 #if UNITY_EDITOR
-        [CallOnChange(nameof(OnEditorChangeColor))]
+        [CallOnChange(nameof(OnColorChange))]
 #endif
         [SerializeField] private Syncable<Color> _colorSyncable = new(Color.white);
 #if UNITY_EDITOR
-        [CallOnChange(nameof(OnEditorChangeInternalChange))]
+        [CallOnChange(nameof(OnInternalChange))]
 #endif
         [SerializeField] private Syncable<InternalChange_Example> _internalChangeSyncable = new(new(0, Color.white));
 
@@ -110,7 +119,7 @@ namespace Mantega.Core.Reactive.Example
 
         private void OnInternalChange(InternalChange_Example oldValue, InternalChange_Example newValue)
         {
-            Debug.Log($"Internal Change Syncable Changed: Value1: {oldValue.Value1} -> {newValue.Value1}, Value2: {oldValue.Value2} -> {newValue.Value2}");
+            Debug.Log($"{oldValue == newValue} Internal Change Syncable Changed: Value1: {oldValue.Value1} -> {newValue.Value1}, Value2: {oldValue.Value2} -> {newValue.Value2}");
         }
 
         public async void AwaitPromise()
@@ -127,25 +136,6 @@ namespace Mantega.Core.Reactive.Example
         }
 
 #if UNITY_EDITOR
-        private void OnColorChange()
-        {
-            Debug.Log($"Color Syncable Changed: {_colorSyncable.Value}");
-        }
-
-        private void OnInternalChange()
-        {
-            Debug.Log($"Internal Change Syncable Changed: Value1: {_internalChangeSyncable.Value.Value1}, Value2: {_internalChangeSyncable.Value.Value2}");
-        }
-
-        private void OnEditorChangeColor()
-        {
-            OnColorChange();
-        }
-
-        private void OnEditorChangeInternalChange()
-        {
-            OnInternalChange();
-        }
 
         [CustomEditor(typeof(Reactive_Example))]
         public class Syncables_ExampleEditor : Editor
@@ -162,7 +152,6 @@ namespace Mantega.Core.Reactive.Example
                 EditorGUILayout.LabelField("Syncable Changes Example", EditorStyles.boldLabel);
 
                 // Changing syncable values
-                bool changeButtonPressed = true;
                 if (GUILayout.Button("Change Color Syncable"))
                 {
                     example._colorSyncable.Value = GenerateRandomColor();
@@ -174,10 +163,6 @@ namespace Mantega.Core.Reactive.Example
                 else if (GUILayout.Button("Change Internal Change Syncable Value2"))
                 {
                     example._internalChangeSyncable.Value.Value2 = GenerateRandomColor();
-                }
-                else
-                {
-                    changeButtonPressed = false;
                 }
 
                 // Title
@@ -197,17 +182,6 @@ namespace Mantega.Core.Reactive.Example
                 else if (GUILayout.Button("Await Promise"))
                 {
                     example.AwaitPromise();
-                }
-
-                if (changeButtonPressed)
-                {
-                    // Mark the object as dirty to ensure changes are saved and reflected in the editor
-                    EditorUtility.SetDirty(example);
-
-                    if (!Application.isPlaying)
-                    {
-                        Debug.Log("Enter Play Mode to see the changes in action.");
-                    }
                 }
             }
         }
