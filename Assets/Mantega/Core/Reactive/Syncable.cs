@@ -6,10 +6,6 @@ namespace Mantega.Core.Reactive
 
     using Mantega.Core.Diagnostics;
 
-#if UNITY_EDITOR
-    using Editor;
-#endif
-
     /// <summary>
     /// Represents a synchronizable value of type <typeparamref name="T"/> that notifies subscribers when its value
     /// changes.
