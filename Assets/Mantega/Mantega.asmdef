@@ -1,0 +1,19 @@
+{
+    "name": "Mantega",
+    "rootNamespace": "",
+    "references": [
+        "GUID:03e67e4b4d065de4bbdaa8b807ec593d",
+        "GUID:75469ad4d38634e559750d17036d5f7c",
+        "GUID:63a57c8b658089e49a173b0f0c4870a7",
+        "GUID:21b0c8d1703a94250bfac916590cea4f"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

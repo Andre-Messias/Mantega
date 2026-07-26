@@ -3,5 +3,10 @@
   "version": "0.1.0",
   "displayName": "Mantega Library",
   "description": "Library of tools for Unity.",
-  "unity": "6000.0"
+  "unity": "6000.0",
+  "dependencies": {
+    "com.unity.inputsystem": "1.19.0",
+    "com.unity.visualscripting": "1.9.1",
+    "com.unity.ai.inference": "2.6.1"
+  }
 }
